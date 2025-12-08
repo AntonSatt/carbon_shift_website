@@ -12,10 +12,11 @@ from app.models.schemas import (
     InstanceInfo,
     RegionInfo,
 )
-from app.models.power_models import AWS_INSTANCE_PROFILES
+from app.models.power_models import AWS_INSTANCE_PROFILES, get_available_instances
 from app.data.carbon_intensity import get_all_regions
 from app.services.simulation_service import simulation_service
 from app.services.ai_service import ai_insights_service
+from app.services.aws_pricing_service import aws_pricing_service
 
 router = APIRouter()
 
@@ -86,3 +87,50 @@ async def get_metadata():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "carbonshift-api"}
+
+
+@router.post("/refresh-prices")
+async def refresh_prices():
+    """
+    Manually refresh EC2 prices from AWS Price List API.
+    
+    This endpoint fetches the latest prices for all instance types
+    and regions, then caches them locally. Call this once per day
+    or when you need to update prices.
+    
+    Requires AWS credentials to be configured.
+    """
+    if not aws_pricing_service.enabled:
+        return {
+            "success": False,
+            "message": "AWS Pricing API not configured. Add AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to .env",
+            "using_static_prices": True,
+        }
+    
+    try:
+        instance_types = get_available_instances()
+        region_codes = [r.region_code for r in get_all_regions()]
+        
+        prices = aws_pricing_service.refresh_all_prices(instance_types, region_codes)
+        
+        total_prices = sum(len(p) for p in prices.values())
+        
+        return {
+            "success": True,
+            "message": f"Refreshed {total_prices} prices across {len(region_codes)} regions",
+            "regions_updated": len(prices),
+            "instance_types": len(instance_types),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to refresh prices: {str(e)}")
+
+
+@router.get("/pricing-status")
+async def pricing_status():
+    """Check the status of the AWS Pricing integration."""
+    return {
+        "aws_pricing_enabled": aws_pricing_service.enabled,
+        "cache_valid": aws_pricing_service._is_cache_valid(),
+        "cached_prices_count": len(aws_pricing_service._cached_prices),
+        "cache_timestamp": aws_pricing_service._cache_timestamp.isoformat() if aws_pricing_service._cache_timestamp else None,
+    }

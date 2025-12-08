@@ -21,6 +21,9 @@ build/
 .env.*.local
 backend/.env
 
+# Cache (AWS pricing data)
+backend/app/cache/*.json
+
 # IDE
 .idea/
 .vscode/

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SimulationForm } from '@/components/simulation-form';
 import { ResultsDashboard } from '@/components/results-dashboard';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { SimulationRequest, SimulationResponse, MetadataResponse } from '@/lib/types';
 import { apiClient } from '@/lib/api';
 import { Leaf } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -49,9 +50,12 @@ export default function Home() {
             <Leaf className="h-6 w-6 text-green-600" />
             <span className="text-xl font-bold">CarbonShift</span>
           </div>
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            Move your bits, save the planet (and money) 🌍
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground hidden sm:block">
+              Move your bits, save the planet (and money) 🌍
+            </p>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

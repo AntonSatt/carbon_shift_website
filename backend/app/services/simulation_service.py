@@ -11,7 +11,7 @@ from app.models.schemas import (
     RegionResult,
 )
 from app.data.carbon_intensity import get_region_carbon_data, get_all_regions
-from app.data.pricing import get_monthly_cost
+from app.services.aws_pricing_service import aws_pricing_service
 
 
 class SimulationService:
@@ -57,13 +57,13 @@ class SimulationService:
             carbon_emissions_g = total_kwh * region_data.carbon_intensity_gco2_kwh
             carbon_emissions_kg = carbon_emissions_g / 1000.0
             
-            # Cost calculation
-            monthly_cost = get_monthly_cost(
+            # Cost calculation using AWS Pricing Service (with fallback to static)
+            monthly_cost = aws_pricing_service.get_monthly_cost(
                 request.instance_type,
                 region_data.region_code,
                 request.hours_per_month,
                 request.instance_count
-            ) or 0.0
+            )
             
             result = RegionResult(
                 region_code=region_data.region_code,
