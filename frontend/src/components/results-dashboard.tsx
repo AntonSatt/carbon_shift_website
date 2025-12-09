@@ -22,10 +22,13 @@ interface ResultsDashboardProps {
 }
 
 export function ResultsDashboard({ result }: ResultsDashboardProps) {
-  const { current_region_result, comparison_regions, best_carbon_region, best_cost_region, equivalencies, ai_insights } = result;
+  const { current_region_result, comparison_regions, best_carbon_region, best_cost_region, equivalencies, ai_insights, ai_provider } = result;
 
   // Prepare chart data - include current region + all comparisons
   const allRegions = [current_region_result, ...comparison_regions];
+  
+  // Calculate dynamic chart height based on number of regions (min 400px, ~35px per region)
+  const chartHeight = Math.max(400, allRegions.length * 35);
   
   const carbonChartData = allRegions
     .sort((a, b) => a.carbon_emissions_kg - b.carbon_emissions_kg)
@@ -198,12 +201,12 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div style={{ height: `${chartHeight}px` }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={carbonChartData} layout="vertical" margin={{ left: 80 }}>
+                  <BarChart data={carbonChartData} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={80} />
+                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
                       formatter={(value: number) => [`${value} kg CO₂`, 'Emissions']}
                     />
@@ -232,12 +235,12 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div style={{ height: `${chartHeight}px` }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={costChartData} layout="vertical" margin={{ left: 80 }}>
+                  <BarChart data={costChartData} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" tickFormatter={(value) => `$${value}`} />
-                    <YAxis dataKey="name" type="category" width={80} />
+                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
                       formatter={(value: number) => [`$${value}`, 'Monthly Cost']}
                     />
@@ -258,10 +261,26 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {ai_insights && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              ✨ Sustainability Report
+            <CardTitle className="flex items-center gap-2 justify-between">
+              <span className="flex items-center gap-2">
+                ✨ Sustainability Report
+              </span>
+              {ai_provider && (
+                <Badge 
+                  variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
+                  className="font-normal"
+                >
+                  {ai_provider === 'openrouter' && '🤖 AI-Powered'}
+                  {ai_provider === 'bedrock' && '☁️ AWS AI'}
+                  {ai_provider === 'template' && '📋 Standard Report'}
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>AI-generated insights about your carbon footprint</CardDescription>
+            <CardDescription>
+              {ai_provider === 'openrouter' && 'Personalized recommendations powered by Claude 3.5 Sonnet'}
+              {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
+              {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm dark:prose-invert max-w-none">

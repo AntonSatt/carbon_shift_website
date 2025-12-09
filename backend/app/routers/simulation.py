@@ -27,13 +27,19 @@ async def run_simulation(request: SimulationRequest):
     Run a carbon emissions and cost simulation.
     
     Takes workload configuration and returns comparisons across all regions.
+    Optionally accepts user_location for personalized AI recommendations.
     """
     try:
         # Run the simulation
         result = simulation_service.run_simulation(request)
         
-        # Generate AI insights
-        result.ai_insights = ai_insights_service.generate_insights(result)
+        # Generate AI insights with user location context
+        insights, provider = ai_insights_service.generate_insights(
+            result, 
+            user_location=request.user_location
+        )
+        result.ai_insights = insights
+        result.ai_provider = provider
         
         return result
         

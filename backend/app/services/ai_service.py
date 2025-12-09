@@ -2,10 +2,12 @@
 CarbonShift Simulator - AI Insights Service
 
 Generates human-readable sustainability reports using LLMs.
-Supports Amazon Bedrock (Claude) with fallback to template-based generation.
+Supports OpenRouter (recommended), Amazon Bedrock, and template fallback.
 """
 
 import os
+import json
+import httpx
 from typing import Optional
 from app.models.schemas import SimulationResponse
 
@@ -14,35 +16,107 @@ class AIInsightsService:
     """Service for generating AI-powered sustainability insights."""
     
     def __init__(self):
+        # Check for OpenRouter (recommended)
+        self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        self.openrouter_app_url = os.getenv("OPENROUTER_APP_URL", "http://localhost:3000")
+        self.use_openrouter = bool(self.openrouter_api_key)
+        
+        # Fallback to Bedrock
         self.use_bedrock = os.getenv("USE_BEDROCK", "false").lower() == "true"
         self.bedrock_client = None
         
-        if self.use_bedrock:
+        if self.use_openrouter:
+            print("✓ OpenRouter AI enabled")
+        elif self.use_bedrock:
             try:
                 import boto3
                 self.bedrock_client = boto3.client(
                     service_name="bedrock-runtime",
                     region_name=os.getenv("AWS_REGION", "us-east-1")
                 )
+                print("✓ AWS Bedrock AI enabled")
             except Exception as e:
-                print(f"Failed to initialize Bedrock client: {e}")
+                print(f"✗ Failed to initialize Bedrock client: {e}")
                 self.use_bedrock = False
+        
+        if not self.use_openrouter and not self.use_bedrock:
+            print("ℹ Using template-based insights (no AI API configured)")
     
-    def generate_insights(self, simulation: SimulationResponse) -> str:
+    def generate_insights(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> tuple[str, str]:
         """
         Generate sustainability insights for a simulation.
         
+        Args:
+            simulation: The simulation results
+            user_location: Optional user location for personalized recommendations
+        
+        Returns:
+            tuple[str, str]: (insights_text, provider_name)
+        
         Uses AI when available, falls back to template-based generation.
         """
-        if self.use_bedrock and self.bedrock_client:
-            return self._generate_with_bedrock(simulation)
-        return self._generate_template_insights(simulation)
+        if self.use_openrouter:
+            try:
+                insights = self._generate_with_openrouter(simulation, user_location)
+                return (insights, "openrouter")
+            except Exception as e:
+                print(f"✗ OpenRouter failed, falling back to template: {e}")
+                insights = self._generate_template_insights(simulation)
+                return (insights, "template")
+        elif self.use_bedrock and self.bedrock_client:
+            try:
+                insights = self._generate_with_bedrock(simulation, user_location)
+                return (insights, "bedrock")
+            except Exception as e:
+                print(f"✗ Bedrock failed, falling back to template: {e}")
+                insights = self._generate_template_insights(simulation)
+                return (insights, "template")
+        insights = self._generate_template_insights(simulation)
+        return (insights, "template")
     
-    def _generate_with_bedrock(self, simulation: SimulationResponse) -> str:
-        """Generate insights using Amazon Bedrock (Claude)."""
-        import json
+    def _generate_with_openrouter(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
+        """Generate insights using OpenRouter API."""
+        prompt = self._build_prompt(simulation, user_location)
         
-        prompt = self._build_prompt(simulation)
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.openrouter_api_key}",
+                        "HTTP-Referer": self.openrouter_app_url,
+                        "X-Title": "CarbonShift Simulator",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "amazon/nova-2-lite-v1:free",  # Fast and high quality
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": prompt
+                            }
+                        ],
+                        "max_tokens": 1500,
+                        "temperature": 0.7,
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return data["choices"][0]["message"]["content"]
+                else:
+                    error_msg = f"Status {response.status_code}: {response.text[:200]}"
+                    print(f"✗ OpenRouter API error: {error_msg}")
+                    raise Exception(error_msg)
+                    
+        except Exception as e:
+            print(f"✗ OpenRouter API error: {e}")
+            raise
+    
+    def _generate_with_bedrock(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
+        """Generate insights using Amazon Bedrock (Claude)."""
+        
+        prompt = self._build_prompt(simulation, user_location)
         
         try:
             response = self.bedrock_client.invoke_model(
@@ -66,17 +140,55 @@ class AIInsightsService:
             print(f"Bedrock API error: {e}")
             return self._generate_template_insights(simulation)
     
-    def _build_prompt(self, simulation: SimulationResponse) -> str:
-        """Build the prompt for AI generation."""
+    def _build_prompt(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
+        """Build the prompt for AI generation with personalized context."""
         req = simulation.request
         current = simulation.current_region_result
         best_carbon = simulation.best_carbon_region
         best_cost = simulation.best_cost_region
         equiv = simulation.equivalencies
+        all_regions = [current] + simulation.comparison_regions
         
-        return f"""You are a sustainability consultant analyzing cloud infrastructure carbon emissions.
+        # Build location context with nearby region detection
+        location_context = ""
+        nearby_region_info = ""
         
-Generate a brief, engaging sustainability report (3-4 paragraphs) based on this data:
+        if user_location:
+            # Find regions in the same country/area as user
+            user_lower = user_location.lower()
+            nearby_regions = [
+                r for r in all_regions 
+                if user_lower in r.country.lower() 
+                or user_lower in r.region_name.lower()
+                or any(word in r.country.lower() for word in user_lower.split())
+            ]
+            
+            if nearby_regions:
+                # Find best nearby option (prioritize carbon, then cost)
+                best_nearby = min(nearby_regions, key=lambda x: (x.carbon_emissions_kg, x.monthly_cost_usd))
+                
+                nearby_region_info = f"""
+
+**CRITICAL - LOCAL REGION DETECTED:**
+The user is in {user_location}, and {best_nearby.region_name} ({best_nearby.country}) is a LOCAL region:
+- Carbon: {best_nearby.carbon_emissions_kg} kg CO2/month
+- Cost: ${best_nearby.monthly_cost_usd}/month
+- Latency: MINIMAL (<5-10ms) - BEST for performance and user experience
+- Compliance: IDEAL for {user_location} data residency and regulations (e.g., GDPR for EU)
+- This should be your PRIMARY recommendation unless carbon/cost savings from other regions are DRAMATICALLY better (>50% improvement)
+"""
+            
+            location_context = f"""
+**User Context:**
+- User is located in: {user_location}
+- Prioritize nearby regions for latency (<10ms local vs 50-100ms+ distant)
+- Consider data sovereignty: EU data should stay in EU, etc.
+- Local regions offer better user experience and regulatory compliance
+"""
+        
+        return f"""You are a sustainability consultant analyzing cloud infrastructure carbon emissions for a client.
+        
+Generate a brief, engaging, and PERSONALIZED sustainability report (3-4 paragraphs) based on this data:
 
 **Current Setup:**
 - {req.instance_count}x {req.instance_type} instances in {current.region_name} ({current.country})
@@ -85,13 +197,13 @@ Generate a brief, engaging sustainability report (3-4 paragraphs) based on this 
 - Current emissions: {current.carbon_emissions_kg} kg CO2/month
 - Current cost: ${current.monthly_cost_usd}/month
 
-**Best Low-Carbon Alternative:**
+**Best Low-Carbon Alternative (Global):**
 - Region: {best_carbon.region_name} ({best_carbon.country})
 - Emissions: {best_carbon.carbon_emissions_kg} kg CO2/month
 - Monthly savings: {best_carbon.carbon_savings_kg} kg CO2 ({best_carbon.carbon_savings_percent}%)
 - Yearly savings: {equiv.get('yearly_savings_kg', 0)} kg CO2
 
-**Best Low-Cost Alternative:**
+**Best Low-Cost Alternative (Global):**
 - Region: {best_cost.region_name} ({best_cost.country})
 - Cost: ${best_cost.monthly_cost_usd}/month
 - Monthly savings: ${best_cost.cost_savings_usd}
@@ -99,8 +211,10 @@ Generate a brief, engaging sustainability report (3-4 paragraphs) based on this 
 **Equivalencies for yearly carbon savings:**
 - Equivalent to {equiv.get('car_km_saved', 0)} km of car driving avoided
 - Equal to {equiv.get('tree_months', 0)} tree-months of CO2 absorption
+{location_context}{nearby_region_info}
+Write in a professional but accessible tone. Include specific numbers and make the environmental impact tangible and relatable. 
 
-Write in a professional but accessible tone. Include specific numbers and make the environmental impact tangible and relatable. End with a clear recommendation."""
+**IMPORTANT:** If a local region is detected near the user, recommend it FIRST as the primary option due to latency and compliance benefits, then mention global alternatives only if they offer significantly better carbon/cost (>50% improvement). End with a clear, actionable recommendation."""
 
     def _generate_template_insights(self, simulation: SimulationResponse) -> str:
         """Generate template-based insights without AI."""

@@ -16,6 +16,7 @@ class SimulationRequest(BaseModel):
     cpu_utilization: float = Field(default=50.0, ge=0, le=100, description="Average CPU utilization (%)")
     hours_per_month: float = Field(default=730, ge=1, le=744, description="Hours running per month")
     current_region: str = Field(..., description="Current AWS region (e.g., eu-central-1)")
+    user_location: Optional[str] = Field(None, description="User's location for personalized recommendations (e.g., 'United States', 'Germany', 'Singapore')")
 
 
 class RegionResult(BaseModel):
@@ -45,6 +46,7 @@ class SimulationResponse(BaseModel):
     best_carbon_region: RegionResult
     best_cost_region: RegionResult
     ai_insights: Optional[str] = None
+    ai_provider: Optional[str] = None  # "openrouter", "bedrock", or "template"
     equivalencies: dict = Field(default_factory=dict)
 
 

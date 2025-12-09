@@ -50,11 +50,13 @@ interface SimulationFormProps {
 }
 
 export function SimulationForm({ onSubmit, isLoading, instances, regions }: SimulationFormProps) {
-  const [instanceType, setInstanceType] = useState('t3.micro');
+  // Default to m5.large - a good general-purpose instance for medium companies
+  const [instanceType, setInstanceType] = useState('m5.large');
   const [instanceCount, setInstanceCount] = useState(1);
   const [cpuUtilization, setCpuUtilization] = useState(50);
   const [hoursPerMonth, setHoursPerMonth] = useState(730);
   const [currentRegion, setCurrentRegion] = useState('eu-central-1');
+  const [userLocation, setUserLocation] = useState('');
 
   const availableInstances = instances || DEFAULT_INSTANCES;
   const availableRegions = regions || DEFAULT_REGIONS;
@@ -70,6 +72,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
       cpu_utilization: cpuUtilization,
       hours_per_month: hoursPerMonth,
       current_region: currentRegion,
+      user_location: userLocation || undefined,
     });
   };
 
@@ -189,6 +192,24 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* User Location */}
+          <div className="space-y-2">
+            <Label htmlFor="user-location" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-purple-500" />
+              Your Location (Optional)
+            </Label>
+            <Input
+              id="user-location"
+              type="text"
+              placeholder="e.g., United States, Germany, Singapore"
+              value={userLocation}
+              onChange={(e) => setUserLocation(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              Get personalized recommendations based on latency and regional compliance
+            </p>
           </div>
 
           {/* Submit Button */}

@@ -51,6 +51,9 @@ pip install -r requirements.txt
 
 # Run development server
 uvicorn app.main:app --reload --port 8000
+
+# To kill development server:
+pkill -f "uvicorn app.main:app" 2>/dev/null; cd /home/kaffe/Documents/My\ Projects/carbon_shiftv2/backend
 ```
 
 The API will be available at http://localhost:8000

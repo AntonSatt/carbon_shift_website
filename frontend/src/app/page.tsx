@@ -153,20 +153,24 @@ function getMockResult(request: SimulationRequest): SimulationResponse {
   }));
 
   const current = results.find((r) => r.is_current_region) || results[0];
-  const bestCarbon = results.reduce((a, b) => (a.carbon_emissions_kg < b.carbon_emissions_kg ? a : b));
-  const bestCost = results.reduce((a, b) => (a.monthly_cost_usd < b.monthly_cost_usd ? a : b));
-
-  bestCarbon.is_lowest_carbon = true;
-  bestCost.is_lowest_cost = true;
-
+  
+  // Find minimum values
+  const minCarbon = Math.min(...results.map((r) => r.carbon_emissions_kg));
+  const minCost = Math.min(...results.map((r) => r.monthly_cost_usd));
+  
+  // Mark ALL regions that tie for the lowest (not just one)
   results.forEach((r) => {
+    r.is_lowest_carbon = r.carbon_emissions_kg === minCarbon;
+    r.is_lowest_cost = r.monthly_cost_usd === minCost;
     r.carbon_savings_kg = Math.round((current.carbon_emissions_kg - r.carbon_emissions_kg) * 100) / 100;
     r.cost_savings_usd = Math.round((current.monthly_cost_usd - r.monthly_cost_usd) * 100) / 100;
     r.carbon_savings_percent = Math.round((r.carbon_savings_kg / current.carbon_emissions_kg) * 1000) / 10;
     r.cost_savings_percent = Math.round((r.cost_savings_usd / current.monthly_cost_usd) * 1000) / 10;
   });
 
-  const yearlyCarbon = (current.carbon_emissions_kg - bestCarbon.carbon_emissions_kg) * 12;
+  const bestCarbon = results.find((r) => r.is_lowest_carbon)!;
+  const bestCost = results.find((r) => r.is_lowest_cost)!;
+  const yearlyCarbon = (current.carbon_emissions_kg - minCarbon) * 12;
 
   return {
     success: true,
@@ -176,6 +180,7 @@ function getMockResult(request: SimulationRequest): SimulationResponse {
     best_carbon_region: bestCarbon,
     best_cost_region: bestCost,
     ai_insights: `## 🌱 Sustainability Analysis\n\nYour current deployment in **${current.region_name}** produces approximately **${current.carbon_emissions_kg} kg CO₂ per month**.\n\nBy migrating to **${bestCarbon.region_name}** (${bestCarbon.country}), you could reduce emissions to just **${bestCarbon.carbon_emissions_kg} kg CO₂ per month** — a **${Math.abs(bestCarbon.carbon_savings_percent)}% reduction**!\n\n### 🎯 Recommendation\n\n**Consider migrating** to **${bestCarbon.region_name}** for meaningful carbon savings. This contributes positively to your sustainability goals while potentially reducing costs.`,
+    ai_provider: 'template',
     equivalencies: {
       yearly_savings_kg: Math.round(yearlyCarbon * 10) / 10,
       car_km_saved: Math.round(yearlyCarbon * 4),

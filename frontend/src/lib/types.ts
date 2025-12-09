@@ -7,6 +7,7 @@ export interface SimulationRequest {
   cpu_utilization: number;
   hours_per_month: number;
   current_region: string;
+  user_location?: string;
 }
 
 export interface RegionResult {
@@ -41,6 +42,7 @@ export interface SimulationResponse {
   best_carbon_region: RegionResult;
   best_cost_region: RegionResult;
   ai_insights: string | null;
+  ai_provider: string | null;
   equivalencies: Equivalencies;
 }
 

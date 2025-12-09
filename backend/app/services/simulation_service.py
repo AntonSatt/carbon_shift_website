@@ -80,14 +80,14 @@ class SimulationService:
         # Find current region result
         current_result = next(r for r in all_results if r.is_current_region)
         
-        # Find best regions
-        best_carbon = min(all_results, key=lambda r: r.carbon_emissions_kg)
-        best_cost = min(all_results, key=lambda r: r.monthly_cost_usd)
+        # Find best values (minimum carbon and cost)
+        min_carbon = min(r.carbon_emissions_kg for r in all_results)
+        min_cost = min(r.monthly_cost_usd for r in all_results)
         
-        # Mark best regions
+        # Mark ALL regions that tie for the best (not just one)
         for result in all_results:
-            result.is_lowest_carbon = (result.region_code == best_carbon.region_code)
-            result.is_lowest_cost = (result.region_code == best_cost.region_code)
+            result.is_lowest_carbon = (result.carbon_emissions_kg == min_carbon)
+            result.is_lowest_cost = (result.monthly_cost_usd == min_cost)
             
             # Calculate savings compared to current region
             result.carbon_savings_kg = round(
@@ -111,8 +111,12 @@ class SimulationService:
         comparison_regions = [r for r in all_results if not r.is_current_region]
         comparison_regions.sort(key=lambda r: r.carbon_emissions_kg)
         
+        # Get first best regions for the response (for summary cards)
+        best_carbon = next(r for r in all_results if r.is_lowest_carbon)
+        best_cost = next(r for r in all_results if r.is_lowest_cost)
+        
         # Calculate equivalencies for potential savings
-        max_carbon_savings = current_result.carbon_emissions_kg - best_carbon.carbon_emissions_kg
+        max_carbon_savings = current_result.carbon_emissions_kg - min_carbon
         yearly_carbon_savings = max_carbon_savings * 12
         
         equivalencies = {
