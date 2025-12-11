@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import { Leaf, DollarSign, Award, Car, TreePine, Smartphone } from 'lucide-react';
+import { Leaf, Award, Car, TreePine, Smartphone } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ResultsDashboardProps {
@@ -143,7 +143,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {/* Summary Cards - 2 cards: Current Setup vs AI Recommended */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Current Region */}
-        <Card>
+        <Card className="border-amber-200 bg-amber-50/30 dark:border-amber-800 dark:bg-amber-950/20">
           <CardHeader className="pb-2">
             <CardDescription>Your Current Setup</CardDescription>
             <CardTitle className="text-lg flex items-center gap-2">

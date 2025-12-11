@@ -81,7 +81,7 @@ export default function Home() {
               instances={metadata?.instances}
               regions={metadata?.regions}
             />
-            
+
             {error && (
               <div className="mt-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
                 ⚠️ {error}
@@ -153,11 +153,11 @@ function getMockResult(request: SimulationRequest): SimulationResponse {
   }));
 
   const current = results.find((r) => r.is_current_region) || results[0];
-  
+
   // Find minimum values
   const minCarbon = Math.min(...results.map((r) => r.carbon_emissions_kg));
   const minCost = Math.min(...results.map((r) => r.monthly_cost_usd));
-  
+
   // Mark ALL regions that tie for the lowest (not just one)
   results.forEach((r) => {
     r.is_lowest_carbon = r.carbon_emissions_kg === minCarbon;
@@ -179,6 +179,7 @@ function getMockResult(request: SimulationRequest): SimulationResponse {
     comparison_regions: results.filter((r) => !r.is_current_region),
     best_carbon_region: bestCarbon,
     best_cost_region: bestCost,
+    ai_recommended_region: bestCarbon,  // In demo mode, recommend lowest carbon
     ai_insights: `## 🌱 Sustainability Analysis\n\nYour current deployment in **${current.region_name}** produces approximately **${current.carbon_emissions_kg} kg CO₂ per month**.\n\nBy migrating to **${bestCarbon.region_name}** (${bestCarbon.country}), you could reduce emissions to just **${bestCarbon.carbon_emissions_kg} kg CO₂ per month** — a **${Math.abs(bestCarbon.carbon_savings_percent)}% reduction**!\n\n### 🎯 Recommendation\n\n**Consider migrating** to **${bestCarbon.region_name}** for meaningful carbon savings. This contributes positively to your sustainability goals while potentially reducing costs.`,
     ai_provider: 'template',
     equivalencies: {
