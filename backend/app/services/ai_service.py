@@ -42,7 +42,7 @@ class AIInsightsService:
         if not self.use_openrouter and not self.use_bedrock:
             print("ℹ Using template-based insights (no AI API configured)")
     
-    def generate_insights(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> tuple[str, str]:
+    def generate_insights(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> tuple[str, str, Optional[str]]:
         """
         Generate sustainability insights for a simulation.
         
@@ -51,28 +51,64 @@ class AIInsightsService:
             user_location: Optional user location for personalized recommendations
         
         Returns:
-            tuple[str, str]: (insights_text, provider_name)
+            tuple[str, str, Optional[str]]: (insights_text, provider_name, recommended_region_code)
         
         Uses AI when available, falls back to template-based generation.
         """
+        # Determine the AI-recommended region based on user location
+        recommended_region_code = self._determine_recommended_region(simulation, user_location)
+        
         if self.use_openrouter:
             try:
                 insights = self._generate_with_openrouter(simulation, user_location)
-                return (insights, "openrouter")
+                return (insights, "openrouter", recommended_region_code)
             except Exception as e:
                 print(f"✗ OpenRouter failed, falling back to template: {e}")
                 insights = self._generate_template_insights(simulation)
-                return (insights, "template")
+                return (insights, "template", recommended_region_code)
         elif self.use_bedrock and self.bedrock_client:
             try:
                 insights = self._generate_with_bedrock(simulation, user_location)
-                return (insights, "bedrock")
+                return (insights, "bedrock", recommended_region_code)
             except Exception as e:
                 print(f"✗ Bedrock failed, falling back to template: {e}")
                 insights = self._generate_template_insights(simulation)
-                return (insights, "template")
+                return (insights, "template", recommended_region_code)
         insights = self._generate_template_insights(simulation)
-        return (insights, "template")
+        return (insights, "template", recommended_region_code)
+    
+    def _determine_recommended_region(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> Optional[str]:
+        """
+        Determine the AI-recommended region based on user location and carbon efficiency.
+        
+        Prioritizes:
+        1. Local regions (for latency/GDPR) if user location is provided
+        2. Falls back to lowest carbon region
+        
+        Returns:
+            Region code of the recommended region
+        """
+        current = simulation.current_region_result
+        all_regions = [current] + simulation.comparison_regions
+        
+        if user_location:
+            user_lower = user_location.lower()
+            
+            # Find regions in the same country/area as user
+            nearby_regions = [
+                r for r in all_regions 
+                if user_lower in r.country.lower() 
+                or user_lower in r.region_name.lower()
+                or any(word in r.country.lower() for word in user_lower.split())
+            ]
+            
+            if nearby_regions:
+                # Find best nearby option (prioritize carbon, then cost)
+                best_nearby = min(nearby_regions, key=lambda x: (x.carbon_emissions_kg, x.monthly_cost_usd))
+                return best_nearby.region_code
+        
+        # Fall back to lowest carbon region
+        return simulation.best_carbon_region.region_code
     
     def _generate_with_openrouter(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
         """Generate insights using OpenRouter API."""
@@ -188,7 +224,7 @@ The user is in {user_location}, and {best_nearby.region_name} ({best_nearby.coun
         
         return f"""You are a sustainability consultant analyzing cloud infrastructure carbon emissions for a client.
         
-Generate a brief, engaging, and PERSONALIZED sustainability report (3-4 paragraphs) based on this data:
+Generate a structured sustainability report using CLEAR MARKDOWN SECTIONS based on this data:
 
 **Current Setup:**
 - {req.instance_count}x {req.instance_type} instances in {current.region_name} ({current.country})
@@ -212,9 +248,25 @@ Generate a brief, engaging, and PERSONALIZED sustainability report (3-4 paragrap
 - Equivalent to {equiv.get('car_km_saved', 0)} km of car driving avoided
 - Equal to {equiv.get('tree_months', 0)} tree-months of CO2 absorption
 {location_context}{nearby_region_info}
-Write in a professional but accessible tone. Include specific numbers and make the environmental impact tangible and relatable. 
 
-**IMPORTANT:** If a local region is detected near the user, recommend it FIRST as the primary option due to latency and compliance benefits, then mention global alternatives only if they offer significantly better carbon/cost (>50% improvement). End with a clear, actionable recommendation."""
+**FORMATTING REQUIREMENTS - VERY IMPORTANT:**
+Use this EXACT structure with markdown headers:
+
+## 📊 Current Analysis
+Brief analysis of current setup (2-3 sentences)
+
+## 🌱 Recommended Action
+Primary recommendation with key benefits and specific numbers (2-3 sentences)
+
+## 🌍 Alternative Options
+If relevant, mention 1-2 alternative regions with key tradeoffs (2-3 bullet points)
+
+## ✅ Summary
+One clear, actionable sentence summarizing the recommendation
+
+Keep each section SHORT and FOCUSED. Use bullet points for lists. Bold **key numbers** and **region names**.
+If a local region is detected, recommend it as primary option due to latency/compliance benefits."""
+
 
     def _generate_template_insights(self, simulation: SimulationResponse) -> str:
         """Generate template-based insights without AI."""
@@ -229,68 +281,78 @@ Write in a professional but accessible tone. Include specific numbers and make t
         same_region = best_carbon.region_code == current.region_code
         
         if same_region:
-            intro = f"""## 🌱 Sustainability Analysis
+            intro = f"""## 📊 Current Analysis
 
-Great news! Your current deployment in **{current.region_name}** ({current.country}) is already one of the most carbon-efficient options available.
-
-Your **{req.instance_count}x {req.instance_type}** instances emit approximately **{current.carbon_emissions_kg} kg CO2 per month**, which is excellent compared to other regions."""
+Great news! Your current deployment in **{current.region_name}** ({current.country}) is already one of the most carbon-efficient options available. Your **{req.instance_count}x {req.instance_type}** instances emit approximately **{current.carbon_emissions_kg} kg CO2 per month**."""
         else:
-            intro = f"""## 🌱 Sustainability Analysis
+            intro = f"""## 📊 Current Analysis
 
-Your current deployment of **{req.instance_count}x {req.instance_type}** instances in **{current.region_name}** ({current.country}) produces approximately **{current.carbon_emissions_kg} kg CO2 per month**.
+Your current deployment of **{req.instance_count}x {req.instance_type}** instances in **{current.region_name}** ({current.country}) produces approximately **{current.carbon_emissions_kg} kg CO2 per month**."""
 
-By migrating to **{best_carbon.region_name}** ({best_carbon.country}), you could reduce emissions to just **{best_carbon.carbon_emissions_kg} kg CO2 per month** — a **{carbon_improvement}% reduction**!"""
+        # Recommendation section
+        if same_region:
+            recommendation = """
+
+## 🌱 Recommended Action
+
+**Stay in your current region!** You've already optimized for carbon efficiency. Consider monitoring your CPU utilization to ensure you're right-sizing your instances."""
+        elif carbon_improvement > 50:
+            recommendation = f"""
+
+## 🌱 Recommended Action
+
+**Strongly recommended:** Migrate to **{best_carbon.region_name}** for significant environmental benefits. This would reduce emissions to just **{best_carbon.carbon_emissions_kg} kg CO2 per month** — a **{carbon_improvement}% reduction**!"""
+        elif carbon_improvement > 20:
+            recommendation = f"""
+
+## 🌱 Recommended Action
+
+**Consider migrating** to **{best_carbon.region_name}** for meaningful carbon savings. This would reduce emissions to **{best_carbon.carbon_emissions_kg} kg CO2 per month** — a **{carbon_improvement}% reduction**."""
+        else:
+            recommendation = f"""
+
+## 🌱 Recommended Action
+
+Your current region is reasonably efficient. If you prioritize sustainability, **{best_carbon.region_name}** offers a **{carbon_improvement}%** reduction to **{best_carbon.carbon_emissions_kg} kg CO2 per month**."""
 
         # Impact section
         if equiv.get('yearly_savings_kg', 0) > 0:
             impact = f"""
-### 🚗 Environmental Impact
 
-Over a year, this migration would save approximately **{equiv.get('yearly_savings_kg', 0)} kg of CO2**. To put that in perspective:
+## 🌍 Environmental Impact
+
+Over a year, this migration would save approximately **{equiv.get('yearly_savings_kg', 0)} kg of CO2**:
 - 🚙 Equivalent to avoiding **{int(equiv.get('car_km_saved', 0)):,} km** of car travel
 - 🌳 Equal to **{int(equiv.get('tree_months', 0))} tree-months** of CO2 absorption
 - 📱 Same as **{int(equiv.get('smartphone_charges', 0)):,}** smartphone charges"""
         else:
             impact = """
-### 🌿 Environmental Impact
+
+## 🌍 Environmental Impact
 
 Your current region is already optimized for low carbon emissions. Keep up the great work!"""
 
-        # Cost analysis
-        if best_cost.cost_savings_usd > 0:
-            cost_section = f"""
-### 💰 Cost Optimization
+        # Cost note
+        if best_cost.cost_savings_usd > 0 and best_cost.region_code != best_carbon.region_code:
+            cost_note = f"""
 
-The most cost-effective region is **{best_cost.region_name}** ({best_cost.country}) at **${best_cost.monthly_cost_usd}/month**, saving you **${best_cost.cost_savings_usd}/month** (${round(best_cost.cost_savings_usd * 12, 2)}/year)."""
+## ✅ Summary
+
+For the best sustainability outcome, migrate to **{best_carbon.region_name}**. Note: **{best_cost.region_name}** offers the lowest cost at **${best_cost.monthly_cost_usd}/month** if budget is your priority."""
+        elif same_region:
+            cost_note = """
+
+## ✅ Summary
+
+Your infrastructure is already well-optimized. Continue monitoring your usage for further efficiency gains."""
         else:
-            cost_section = f"""
-### 💰 Cost Analysis
+            cost_note = f"""
 
-Your current region offers competitive pricing at **${current.monthly_cost_usd}/month**."""
+## ✅ Summary
 
-        # Recommendation
-        if same_region:
-            recommendation = """
-### ✅ Recommendation
+Migrate to **{best_carbon.region_name}** for a **{carbon_improvement}%** reduction in carbon emissions."""
 
-**Stay in your current region!** You've already optimized for carbon efficiency. Consider monitoring your CPU utilization to ensure you're right-sizing your instances."""
-        elif carbon_improvement > 50:
-            recommendation = f"""
-### 🎯 Recommendation
-
-**Strongly recommended:** Migrate to **{best_carbon.region_name}** for significant environmental benefits. The {carbon_improvement}% carbon reduction makes this a high-impact sustainability win."""
-        elif carbon_improvement > 20:
-            recommendation = f"""
-### 🎯 Recommendation
-
-**Consider migrating** to **{best_carbon.region_name}** for meaningful carbon savings. A {carbon_improvement}% reduction contributes positively to your sustainability goals."""
-        else:
-            recommendation = f"""
-### 🎯 Recommendation
-
-Your current region is reasonably efficient. If you prioritize sustainability, **{best_carbon.region_name}** offers modest improvements. Consider other factors like latency and compliance when making your decision."""
-
-        return intro + impact + cost_section + recommendation
+        return intro + recommendation + impact + cost_note
 
 
 # Singleton instance

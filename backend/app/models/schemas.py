@@ -45,6 +45,7 @@ class SimulationResponse(BaseModel):
     comparison_regions: list[RegionResult]
     best_carbon_region: RegionResult
     best_cost_region: RegionResult
+    ai_recommended_region: Optional[RegionResult] = None  # AI's overall recommendation (considers latency, GDPR, user location)
     ai_insights: Optional[str] = None
     ai_provider: Optional[str] = None  # "openrouter", "bedrock", or "template"
     equivalencies: dict = Field(default_factory=dict)

@@ -22,14 +22,17 @@ interface ResultsDashboardProps {
 }
 
 export function ResultsDashboard({ result }: ResultsDashboardProps) {
-  const { current_region_result, comparison_regions, best_carbon_region, best_cost_region, equivalencies, ai_insights, ai_provider } = result;
+  const { current_region_result, comparison_regions, best_carbon_region, best_cost_region, equivalencies, ai_insights, ai_provider, ai_recommended_region } = result;
+
+  // Use AI recommendation when available, fallback to lowest carbon region
+  const recommended_region = ai_recommended_region || best_carbon_region;
 
   // Prepare chart data - include current region + all comparisons
   const allRegions = [current_region_result, ...comparison_regions];
-  
+
   // Calculate dynamic chart height based on number of regions (min 400px, ~35px per region)
   const chartHeight = Math.max(400, allRegions.length * 35);
-  
+
   const carbonChartData = allRegions
     .sort((a, b) => a.carbon_emissions_kg - b.carbon_emissions_kg)
     .map((region) => ({
@@ -56,8 +59,89 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* AI Insights / Sustainability Report - Now at the top */}
+      {ai_insights && (
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
+            <CardTitle className="flex items-center gap-2 justify-between">
+              <span className="flex items-center gap-2">
+                <span className="text-2xl">✨</span>
+                <span className="inline-block font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent pb-0.5">
+                  Sustainability Report
+                </span>
+              </span>
+              {ai_provider && (
+                <Badge
+                  variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
+                  className="font-normal"
+                >
+                  {ai_provider === 'openrouter' && '🤖 AI-Powered'}
+                  {ai_provider === 'bedrock' && '☁️ AWS AI'}
+                  {ai_provider === 'template' && '📋 Standard Report'}
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {ai_provider === 'openrouter' && 'Personalized recommendations powered by advanced AI analysis'}
+              {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
+              {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="ai-report-prose max-w-none text-sm leading-relaxed">
+              <ReactMarkdown
+                components={{
+                  h2: ({ children }) => (
+                    <h2 className="text-lg font-semibold mt-6 mb-3 pb-2 border-b border-border/50 first:mt-0">
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-base font-semibold mt-5 mb-2 text-foreground/90 flex items-center gap-2">
+                      {children}
+                    </h3>
+                  ),
+                  p: ({ children }) => (
+                    <p className="mb-4 last:mb-0 text-muted-foreground leading-relaxed">
+                      {children}
+                    </p>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-foreground">
+                      {children}
+                    </strong>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="my-3 ml-4 space-y-2">
+                      {children}
+                    </ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="my-3 ml-4 space-y-2 list-decimal">
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="text-muted-foreground pl-1 relative before:content-['•'] before:absolute before:-left-4 before:text-emerald-500 before:font-bold">
+                      {children}
+                    </li>
+                  ),
+                  em: ({ children }) => (
+                    <em className="text-foreground/80 not-italic font-medium">
+                      {children}
+                    </em>
+                  ),
+                }}
+              >
+                {ai_insights}
+              </ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary Cards - 2 cards: Current Setup vs AI Recommended */}
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Current Region */}
         <Card>
           <CardHeader className="pb-2">
@@ -80,59 +164,37 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Best Carbon */}
+        {/* AI Recommended - Based on user location, latency, GDPR, and carbon */}
         <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1">
               <Leaf className="h-3 w-3 text-green-600" />
-              Lowest Carbon
+              AI Recommended
             </CardDescription>
             <CardTitle className="text-lg flex items-center gap-2">
-              🌱 {best_carbon_region.region_name}
-              {best_carbon_region.is_current_region && <Badge variant="outline">Current</Badge>}
+              🌱 {recommended_region.region_name}
+              {recommended_region.is_current_region && <Badge variant="outline">Current</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">CO₂/month</span>
-                <span className="font-medium text-green-600">{best_carbon_region.carbon_emissions_kg} kg</span>
+                <span className="font-medium text-green-600">{recommended_region.carbon_emissions_kg} kg</span>
               </div>
-              {!best_carbon_region.is_current_region && (
+              {!recommended_region.is_current_region && recommended_region.carbon_savings_kg > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Savings</span>
+                  <span className="text-muted-foreground">CO₂ Savings</span>
                   <span className="font-medium text-green-600">
-                    -{best_carbon_region.carbon_savings_kg} kg ({Math.abs(best_carbon_region.carbon_savings_percent)}%)
+                    -{recommended_region.carbon_savings_kg} kg ({Math.abs(recommended_region.carbon_savings_percent)}%)
                   </span>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Best Cost */}
-        <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1">
-              <DollarSign className="h-3 w-3 text-blue-600" />
-              Lowest Cost
-            </CardDescription>
-            <CardTitle className="text-lg flex items-center gap-2">
-              💰 {best_cost_region.region_name}
-              {best_cost_region.is_current_region && <Badge variant="outline">Current</Badge>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Cost/month</span>
-                <span className="font-medium text-blue-600">${best_cost_region.monthly_cost_usd}</span>
-              </div>
-              {!best_cost_region.is_current_region && (
+              {!recommended_region.is_current_region && recommended_region.cost_savings_usd !== 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Savings</span>
-                  <span className="font-medium text-blue-600">
-                    ${best_cost_region.cost_savings_usd}/mo
+                  <span className="text-muted-foreground">Cost Savings</span>
+                  <span className={`font-medium ${recommended_region.cost_savings_usd > 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {recommended_region.cost_savings_usd > 0 ? '$' + recommended_region.cost_savings_usd + '/mo' : '+$' + Math.abs(recommended_region.cost_savings_usd) + '/mo'}
                   </span>
                 </div>
               )}
@@ -150,7 +212,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               Yearly Savings Potential
             </CardTitle>
             <CardDescription>
-              By switching to {best_carbon_region.region_name}, you could save {equivalencies.yearly_savings_kg} kg CO₂ per year
+              By switching to {recommended_region.region_name}, you could save {equivalencies.yearly_savings_kg} kg CO₂ per year
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,7 +249,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           <TabsTrigger value="carbon">🌱 Carbon Emissions</TabsTrigger>
           <TabsTrigger value="cost">💰 Monthly Cost</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="carbon">
           <Card>
             <CardHeader>
@@ -256,39 +318,6 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* AI Insights */}
-      {ai_insights && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 justify-between">
-              <span className="flex items-center gap-2">
-                ✨ Sustainability Report
-              </span>
-              {ai_provider && (
-                <Badge 
-                  variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
-                  className="font-normal"
-                >
-                  {ai_provider === 'openrouter' && '🤖 AI-Powered'}
-                  {ai_provider === 'bedrock' && '☁️ AWS AI'}
-                  {ai_provider === 'template' && '📋 Standard Report'}
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription>
-              {ai_provider === 'openrouter' && 'Personalized recommendations powered by Claude 3.5 Sonnet'}
-              {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
-              {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown>{ai_insights}</ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Region Comparison Table */}
       <Card>

@@ -34,12 +34,21 @@ async def run_simulation(request: SimulationRequest):
         result = simulation_service.run_simulation(request)
         
         # Generate AI insights with user location context
-        insights, provider = ai_insights_service.generate_insights(
+        insights, provider, recommended_region_code = ai_insights_service.generate_insights(
             result, 
             user_location=request.user_location
         )
         result.ai_insights = insights
         result.ai_provider = provider
+        
+        # Set the AI-recommended region
+        if recommended_region_code:
+            # Find the region result for the recommended region
+            all_regions = [result.current_region_result] + result.comparison_regions
+            for region in all_regions:
+                if region.region_code == recommended_region_code:
+                    result.ai_recommended_region = region
+                    break
         
         return result
         

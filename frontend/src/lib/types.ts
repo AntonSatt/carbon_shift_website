@@ -41,6 +41,7 @@ export interface SimulationResponse {
   comparison_regions: RegionResult[];
   best_carbon_region: RegionResult;
   best_cost_region: RegionResult;
+  ai_recommended_region?: RegionResult;  // AI's overall recommendation (considers latency, GDPR, user location)
   ai_insights: string | null;
   ai_provider: string | null;
   equivalencies: Equivalencies;
