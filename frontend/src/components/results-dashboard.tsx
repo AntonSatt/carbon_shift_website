@@ -61,8 +61,8 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
     <div className="space-y-6">
       {/* AI Insights / Sustainability Report - Now at the top */}
       {ai_insights && (
-        <Card className="overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
+        <Card className="overflow-hidden pt-0 gap-0">
+          <CardHeader className="pt-6 pb-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
             <CardTitle className="flex items-center gap-2 justify-between">
               <span className="flex items-center gap-2">
                 <span className="text-2xl">✨</span>
