@@ -125,10 +125,9 @@ Prices may vary - for production use, integrate with AWS Price List API.
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
 ---
 
 Built with 💚 for a sustainable cloud future.
+
+Copyright (c) 2025 Anton Sätterkvist
+All rights reserved.
