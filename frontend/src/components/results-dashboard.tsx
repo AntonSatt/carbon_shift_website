@@ -57,34 +57,39 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* AI Insights / Sustainability Report - Now at the top */}
-      {ai_insights && (
-        <Card className="overflow-hidden pt-0 gap-0">
-          <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
-            <CardTitle className="flex flex-row items-center gap-2 justify-between">
-              <span className="flex items-center gap-2">
-                <span className="text-xl md:text-2xl">✨</span>
-                <span className="inline-block font-bold text-base md:text-lg bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                  Sustainability Report
-                </span>
+      <Card className="overflow-hidden pt-0 gap-0">
+        <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-linear-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
+          <CardTitle className="flex flex-row items-center gap-2 justify-between">
+            <span className="flex items-center gap-2">
+              <span className="text-xl md:text-2xl">✨</span>
+              <span className="inline-block font-bold text-base md:text-lg bg-linear-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                Sustainability Report
               </span>
-              {ai_provider && (
-                <Badge
-                  variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
-                  className="font-normal text-xs"
-                >
-                  {ai_provider === 'openrouter' && '🤖 AI-Powered'}
-                  {ai_provider === 'bedrock' && '☁️ AWS AI'}
-                  {ai_provider === 'template' && '📋 Standard Report'}
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription className="text-xs md:text-sm">
-              {ai_provider === 'openrouter' && 'Personalized recommendations powered by advanced AI analysis'}
-              {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
-              {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6">
+            </span>
+            {ai_provider ? (
+              <Badge
+                variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
+                className="font-normal text-xs"
+              >
+                {ai_provider === 'openrouter' && '🤖 AI-Powered'}
+                {ai_provider === 'bedrock' && '☁️ AWS AI'}
+                {ai_provider === 'template' && '📋 Standard Report'}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="font-normal text-xs">
+                Unavailable
+              </Badge>
+            )}
+          </CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            {ai_provider === 'openrouter' && 'Personalized recommendations powered by advanced AI analysis'}
+            {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
+            {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
+            {!ai_provider && 'Report content was not returned for this run'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6">
+          {ai_insights ? (
             <div className="ai-report-prose max-w-none text-sm leading-relaxed">
               <ReactMarkdown
                 components={{
@@ -133,9 +138,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                 {ai_insights}
               </ReactMarkdown>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Sustainability report content wasn’t returned for this run. Your recommended region is still shown above.
+              Try running the simulation again.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Summary Cards - 2 cards: Current Setup vs AI Recommended */}
       <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2">

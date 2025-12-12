@@ -19,6 +19,7 @@ class AIInsightsService:
         # Check for OpenRouter (recommended)
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
         self.openrouter_app_url = os.getenv("OPENROUTER_APP_URL", "http://localhost:3000")
+        self.openrouter_model = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-20b:free")
         self.use_openrouter = bool(self.openrouter_api_key)
         
         # Fallback to Bedrock
@@ -113,8 +114,30 @@ class AIInsightsService:
     def _generate_with_openrouter(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
         """Generate insights using OpenRouter API."""
         prompt = self._build_prompt(simulation, user_location)
-        
-        try:
+
+        def _extract_content(message: object) -> Optional[str]:
+            if not isinstance(message, dict):
+                return None
+            content = message.get("content")
+            if isinstance(content, str):
+                return content
+            # Some OpenAI-compatible APIs/models may return content as a list of parts
+            # e.g. [{"type":"text","text":"..."}, ...]
+            if isinstance(content, list):
+                parts: list[str] = []
+                for part in content:
+                    if isinstance(part, str):
+                        parts.append(part)
+                        continue
+                    if isinstance(part, dict):
+                        text = part.get("text")
+                        if isinstance(text, str):
+                            parts.append(text)
+                joined = "".join(parts)
+                return joined if joined else None
+            return None
+
+        def _call_openrouter(model: str) -> str:
             with httpx.Client(timeout=30.0) as client:
                 response = client.post(
                     "https://openrouter.ai/api/v1/chat/completions",
@@ -125,28 +148,53 @@ class AIInsightsService:
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": "amazon/nova-2-lite-v1:free",  # Fast and high quality
+                        "model": model,
                         "messages": [
                             {
                                 "role": "user",
-                                "content": prompt
+                                "content": prompt,
                             }
                         ],
                         "max_tokens": 1500,
                         "temperature": 0.7,
-                    }
+                    },
                 )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
+
+                if response.status_code != 200:
                     error_msg = f"Status {response.status_code}: {response.text[:200]}"
                     print(f"✗ OpenRouter API error: {error_msg}")
                     raise Exception(error_msg)
-                    
+
+                data = response.json()
+                choices = data.get("choices") or []
+                choice0 = choices[0] if choices else {}
+                message = choice0.get("message") if isinstance(choice0, dict) else None
+
+                content = _extract_content(message)
+                if not isinstance(content, str) or not content.strip():
+                    request_id = data.get("id")
+                    resolved_model = data.get("model") or model
+                    finish_reason = choice0.get("finish_reason") if isinstance(choice0, dict) else None
+                    message_keys = list(message.keys()) if isinstance(message, dict) else None
+                    print(
+                        "✗ OpenRouter returned empty content "
+                        f"(id={request_id}, model={resolved_model}, finish_reason={finish_reason}, message_keys={message_keys})"
+                    )
+                    raise Exception("OpenRouter returned empty message content")
+
+                return content
+        
+        try:
+            return _call_openrouter(self.openrouter_model)
         except Exception as e:
+            # Free-tier models occasionally return empty content with HTTP 200.
+            # Try one retry with a slightly more deterministic setup before failing.
             print(f"✗ OpenRouter API error: {e}")
+            if self.openrouter_model.endswith(":free"):
+                try:
+                    return _call_openrouter(self.openrouter_model)
+                except Exception as e2:
+                    print(f"✗ OpenRouter retry failed: {e2}")
             raise
     
     def _generate_with_bedrock(self, simulation: SimulationResponse, user_location: Optional[str] = None) -> str:
