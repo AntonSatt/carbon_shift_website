@@ -6,7 +6,7 @@ import { ResultsDashboard } from '@/components/results-dashboard';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SimulationRequest, SimulationResponse, MetadataResponse } from '@/lib/types';
 import { apiClient } from '@/lib/api';
-import { Leaf } from 'lucide-react';
+import { Leaf, Github, Linkedin, Globe } from 'lucide-react';
 
 export default function Home() {
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -113,6 +113,41 @@ export default function Home() {
         <p className="mt-2">
           Carbon intensity data from Electricity Maps • Pricing based on AWS On-Demand rates
         </p>
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground/70">
+            Made by{' '}
+            <span className="font-medium text-foreground/80">Anton Sätterkvist</span>
+          </p>
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <a
+              href="https://antonsatt.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground/60 hover:text-green-600 transition-colors duration-200"
+              aria-label="Personal Website"
+            >
+              <Globe className="h-4 w-4" />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/anton-satterkvist/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground/60 hover:text-blue-600 transition-colors duration-200"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="h-4 w-4" />
+            </a>
+            <a
+              href="https://github.com/AntonSatt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground/60 hover:text-foreground transition-colors duration-200"
+              aria-label="GitHub"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
