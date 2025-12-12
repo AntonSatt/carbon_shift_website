@@ -22,16 +22,13 @@ interface ResultsDashboardProps {
 }
 
 export function ResultsDashboard({ result }: ResultsDashboardProps) {
-  const { current_region_result, comparison_regions, best_carbon_region, best_cost_region, equivalencies, ai_insights, ai_provider, ai_recommended_region } = result;
+  const { current_region_result, comparison_regions, best_carbon_region, equivalencies, ai_insights, ai_provider, ai_recommended_region } = result;
 
   // Use AI recommendation when available, fallback to lowest carbon region
   const recommended_region = ai_recommended_region || best_carbon_region;
 
   // Prepare chart data - include current region + all comparisons
   const allRegions = [current_region_result, ...comparison_regions];
-
-  // Calculate dynamic chart height based on number of regions (min 400px, ~35px per region)
-  const chartHeight = Math.max(400, allRegions.length * 35);
 
   const carbonChartData = allRegions
     .sort((a, b) => a.carbon_emissions_kg - b.carbon_emissions_kg)
@@ -58,22 +55,22 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* AI Insights / Sustainability Report - Now at the top */}
       {ai_insights && (
         <Card className="overflow-hidden pt-0 gap-0">
-          <CardHeader className="pt-6 pb-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
-            <CardTitle className="flex items-center gap-2 justify-between">
+          <CardHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 dark:from-emerald-500/5 dark:via-teal-500/5 dark:to-cyan-500/5 border-b border-border/50">
+            <CardTitle className="flex flex-row items-center gap-2 justify-between">
               <span className="flex items-center gap-2">
-                <span className="text-2xl">✨</span>
-                <span className="inline-block font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent pb-0.5">
+                <span className="text-xl md:text-2xl">✨</span>
+                <span className="inline-block font-bold text-base md:text-lg bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
                   Sustainability Report
                 </span>
               </span>
               {ai_provider && (
                 <Badge
                   variant={ai_provider === 'openrouter' ? 'default' : ai_provider === 'bedrock' ? 'secondary' : 'outline'}
-                  className="font-normal"
+                  className="font-normal text-xs"
                 >
                   {ai_provider === 'openrouter' && '🤖 AI-Powered'}
                   {ai_provider === 'bedrock' && '☁️ AWS AI'}
@@ -81,28 +78,28 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                 </Badge>
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs md:text-sm">
               {ai_provider === 'openrouter' && 'Personalized recommendations powered by advanced AI analysis'}
               {ai_provider === 'bedrock' && 'AI-generated insights via AWS Bedrock'}
               {ai_provider === 'template' && 'Automated analysis based on your simulation data'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6">
             <div className="ai-report-prose max-w-none text-sm leading-relaxed">
               <ReactMarkdown
                 components={{
                   h2: ({ children }) => (
-                    <h2 className="text-lg font-semibold mt-6 mb-3 pb-2 border-b border-border/50 first:mt-0">
+                    <h2 className="text-base md:text-lg font-semibold mt-5 md:mt-6 mb-2 md:mb-3 pb-2 border-b border-border/50 first:mt-0">
                       {children}
                     </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="text-base font-semibold mt-5 mb-2 text-foreground/90 flex items-center gap-2">
+                    <h3 className="text-sm md:text-base font-semibold mt-4 md:mt-5 mb-2 text-foreground/90">
                       {children}
                     </h3>
                   ),
                   p: ({ children }) => (
-                    <p className="mb-4 last:mb-0 text-muted-foreground leading-relaxed">
+                    <p className="mb-3 md:mb-4 last:mb-0 text-muted-foreground leading-relaxed">
                       {children}
                     </p>
                   ),
@@ -112,12 +109,12 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                     </strong>
                   ),
                   ul: ({ children }) => (
-                    <ul className="my-3 ml-4 space-y-2">
+                    <ul className="my-2 md:my-3 ml-4 space-y-1.5 md:space-y-2">
                       {children}
                     </ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="my-3 ml-4 space-y-2 list-decimal">
+                    <ol className="my-2 md:my-3 ml-4 space-y-1.5 md:space-y-2 list-decimal">
                       {children}
                     </ol>
                   ),
@@ -141,16 +138,16 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       )}
 
       {/* Summary Cards - 2 cards: Current Setup vs AI Recommended */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2">
         {/* Current Region */}
         <Card className="border-amber-200 bg-amber-50/30 dark:border-amber-800 dark:bg-amber-950/20">
-          <CardHeader className="pb-2">
-            <CardDescription>Your Current Setup</CardDescription>
-            <CardTitle className="text-lg flex items-center gap-2">
+          <CardHeader className="p-4 md:p-6 pb-2">
+            <CardDescription className="text-xs md:text-sm">Your Current Setup</CardDescription>
+            <CardTitle className="text-base md:text-xl flex items-center gap-2">
               📍 {current_region_result.region_name}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0">
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">CO₂/month</span>
@@ -164,19 +161,19 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* AI Recommended - Based on user location, latency, GDPR, and carbon */}
+        {/* AI Recommended */}
         <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1">
+          <CardHeader className="p-4 md:p-6 pb-2">
+            <CardDescription className="flex items-center gap-1 text-xs md:text-sm">
               <Leaf className="h-3 w-3 text-green-600" />
               AI Recommended
             </CardDescription>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-base md:text-xl flex items-center gap-2">
               🌱 {recommended_region.region_name}
-              {recommended_region.is_current_region && <Badge variant="outline">Current</Badge>}
+              {recommended_region.is_current_region && <Badge variant="outline" className="text-xs">Current</Badge>}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0">
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">CO₂/month</span>
@@ -206,36 +203,36 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {/* Environmental Impact Equivalencies */}
       {equivalencies.yearly_savings_kg > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+          <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-500" />
               Yearly Savings Potential
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs md:text-sm">
               By switching to {recommended_region.region_name}, you could save {equivalencies.yearly_savings_kg} kg CO₂ per year
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+          <CardContent className="p-4 md:p-6 pt-0">
+            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <Car className="h-8 w-8 text-blue-500" />
+                <Car className="h-7 w-7 md:h-8 md:w-8 text-blue-500 shrink-0" />
                 <div>
-                  <p className="font-bold text-lg">{equivalencies.car_km_saved.toLocaleString()} km</p>
-                  <p className="text-sm text-muted-foreground">of car driving avoided</p>
+                  <p className="font-bold text-base md:text-lg">{equivalencies.car_km_saved.toLocaleString()} km</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">of car driving avoided</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <TreePine className="h-8 w-8 text-green-500" />
+                <TreePine className="h-7 w-7 md:h-8 md:w-8 text-green-500 shrink-0" />
                 <div>
-                  <p className="font-bold text-lg">{equivalencies.tree_months.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">tree-months of absorption</p>
+                  <p className="font-bold text-base md:text-lg">{equivalencies.tree_months.toLocaleString()}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">tree-months of absorption</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <Smartphone className="h-8 w-8 text-purple-500" />
+                <Smartphone className="h-7 w-7 md:h-8 md:w-8 text-purple-500 shrink-0" />
                 <div>
-                  <p className="font-bold text-lg">{equivalencies.smartphone_charges.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">smartphone charges</p>
+                  <p className="font-bold text-base md:text-lg">{equivalencies.smartphone_charges.toLocaleString()}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">smartphone charges</p>
                 </div>
               </div>
             </div>
@@ -252,22 +249,22 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
         <TabsContent value="carbon">
           <Card>
-            <CardHeader>
-              <CardTitle>CO₂ Emissions by Region (kg/month)</CardTitle>
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
+              <CardTitle className="text-base md:text-lg">CO₂ Emissions by Region (kg/month)</CardTitle>
               <CardDescription>
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-green-500"></span> Lowest
-                  <span className="w-3 h-3 rounded-full bg-amber-500 ml-2"></span> Current
-                  <span className="w-3 h-3 rounded-full bg-slate-400 ml-2"></span> Others
+                <span className="inline-flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> Lowest</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Current</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-400"></span> Others</span>
                 </span>
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div style={{ height: `${chartHeight}px` }}>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div style={{ height: `${Math.max(300, allRegions.length * 35)}px` }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={carbonChartData} layout="vertical" margin={{ left: 20, right: 20 }}>
+                  <BarChart data={carbonChartData} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
                     <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
                       formatter={(value: number) => [`${value} kg CO₂`, 'Emissions']}
@@ -286,22 +283,22 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
         <TabsContent value="cost">
           <Card>
-            <CardHeader>
-              <CardTitle>Monthly Cost by Region (USD)</CardTitle>
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
+              <CardTitle className="text-base md:text-lg">Monthly Cost by Region (USD)</CardTitle>
               <CardDescription>
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-blue-500"></span> Lowest
-                  <span className="w-3 h-3 rounded-full bg-amber-500 ml-2"></span> Current
-                  <span className="w-3 h-3 rounded-full bg-slate-400 ml-2"></span> Others
+                <span className="inline-flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Lowest</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Current</span>
+                  <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-400"></span> Others</span>
                 </span>
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div style={{ height: `${chartHeight}px` }}>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div style={{ height: `${Math.max(300, allRegions.length * 35)}px` }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={costChartData} layout="vertical" margin={{ left: 20, right: 20 }}>
+                  <BarChart data={costChartData} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" tickFormatter={(value) => `$${value}`} />
+                    <XAxis type="number" tickFormatter={(value) => `$${value}`} tick={{ fontSize: 12 }} />
                     <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
                       formatter={(value: number) => [`$${value}`, 'Monthly Cost']}
@@ -319,13 +316,13 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         </TabsContent>
       </Tabs>
 
-      {/* Region Comparison Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Regions Comparison</CardTitle>
+      {/* Region Comparison Table - Desktop only */}
+      <Card className="hidden md:block">
+        <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
+          <CardTitle className="text-base md:text-lg">All Regions Comparison</CardTitle>
           <CardDescription>Detailed breakdown of emissions and costs across all regions</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6 pt-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -346,7 +343,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                       key={region.region_code}
                       className={`border-b ${region.is_current_region ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`}
                     >
-                      <td className="py-2 px-3 font-medium">
+                      <td className="py-2.5 px-3 font-medium">
                         {region.region_name}
                         {region.is_current_region && (
                           <Badge variant="outline" className="ml-2 text-xs">Current</Badge>
@@ -357,17 +354,17 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                           </Badge>
                         )}
                       </td>
-                      <td className="py-2 px-3 text-muted-foreground">{region.country}</td>
-                      <td className="py-2 px-3 text-right font-mono">
+                      <td className="py-2.5 px-3 text-muted-foreground">{region.country}</td>
+                      <td className="py-2.5 px-3 text-right font-mono">
                         {region.carbon_intensity_gco2_kwh} g/kWh
                       </td>
-                      <td className="py-2 px-3 text-right font-mono">
+                      <td className="py-2.5 px-3 text-right font-mono">
                         {region.carbon_emissions_kg} kg
                       </td>
-                      <td className="py-2 px-3 text-right font-mono">
+                      <td className="py-2.5 px-3 text-right font-mono">
                         ${region.monthly_cost_usd}
                       </td>
-                      <td className="py-2 px-3 text-right">
+                      <td className="py-2.5 px-3 text-right">
                         {region.carbon_savings_percent > 0 ? (
                           <span className="text-green-600 font-medium">
                             -{region.carbon_savings_percent}%
@@ -387,6 +384,48 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile Region Cards - Show on mobile only */}
+      <div className="md:hidden space-y-2">
+        <h3 className="text-sm font-semibold px-1">All Regions</h3>
+        {allRegions
+          .sort((a, b) => a.carbon_emissions_kg - b.carbon_emissions_kg)
+          .map((region) => (
+            <Card
+              key={region.region_code}
+              className={`${region.is_current_region ? 'border-amber-300 bg-amber-50/50 dark:border-amber-700 dark:bg-amber-950/30' : ''} ${region.is_lowest_carbon ? 'border-green-300 dark:border-green-700' : ''}`}
+            >
+              <CardContent className="p-3">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="font-medium text-sm">{region.region_name}</span>
+                    {region.is_lowest_carbon && <span className="ml-1">🌱</span>}
+                    {region.is_current_region && <span className="ml-1 text-[10px] text-amber-600">(current)</span>}
+                  </div>
+                  {region.carbon_savings_percent > 0 ? (
+                    <span className="text-xs font-medium text-green-600">-{region.carbon_savings_percent}%</span>
+                  ) : region.carbon_savings_percent < 0 ? (
+                    <span className="text-xs font-medium text-red-500">+{Math.abs(region.carbon_savings_percent)}%</span>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-muted-foreground block">CO₂</span>
+                    <span className="font-mono font-medium">{region.carbon_emissions_kg} kg</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Cost</span>
+                    <span className="font-mono font-medium">${region.monthly_cost_usd}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Grid</span>
+                    <span className="font-mono font-medium">{region.carbon_intensity_gco2_kwh}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+      </div>
     </div>
   );
 }

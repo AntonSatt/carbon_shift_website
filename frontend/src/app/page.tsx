@@ -45,13 +45,13 @@ export default function Home() {
     <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-green-600" />
-            <span className="text-xl font-bold">CarbonShift</span>
+            <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+            <span className="text-lg sm:text-xl font-bold">CarbonShift</span>
           </div>
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground hidden sm:block">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <p className="text-sm text-muted-foreground hidden md:block">
               Move your bits, save the planet (and money) 🌍
             </p>
             <ThemeToggle />
@@ -60,19 +60,19 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Hero Section */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold tracking-tight mb-3">
+        <div className="text-center mb-6 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 sm:mb-3">
             Cloud Carbon <span className="text-green-600">Simulator</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
             Discover how much CO₂ and money you can save by choosing the right cloud region for your workloads.
           </p>
         </div>
 
         {/* Content Grid */}
-        <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[400px_1fr]">
           {/* Form */}
           <div className="lg:sticky lg:top-24 lg:self-start">
             <SimulationForm
@@ -95,10 +95,10 @@ export default function Home() {
             {result ? (
               <ResultsDashboard result={result} />
             ) : (
-              <div className="flex flex-col items-center justify-center h-[400px] text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                <Leaf className="h-12 w-12 mb-4 opacity-50" />
-                <p className="text-lg font-medium">Configure your workload</p>
-                <p className="text-sm">Enter your cloud details and click &quot;Calculate Carbon Impact&quot;</p>
+              <div className="flex flex-col items-center justify-center h-[250px] sm:h-[400px] text-center text-muted-foreground border-2 border-dashed rounded-lg px-4">
+                <Leaf className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 opacity-50" />
+                <p className="text-base sm:text-lg font-medium">Configure your workload</p>
+                <p className="text-xs sm:text-sm">Enter your cloud details and click &quot;Calculate Carbon Impact&quot;</p>
               </div>
             )}
           </div>
@@ -106,7 +106,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t mt-16 py-8 text-center text-sm text-muted-foreground">
+      <footer className="border-t mt-8 sm:mt-16 py-6 sm:py-8 text-center text-xs sm:text-sm text-muted-foreground px-4">
         <p>
           Built with 💚 for a sustainable cloud future.
         </p>

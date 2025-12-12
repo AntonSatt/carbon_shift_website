@@ -78,21 +78,21 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Cloud className="h-5 w-5 text-blue-500" />
+      <CardHeader className="pb-4 sm:pb-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Cloud className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
           Configure Your Workload
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
           Enter your cloud infrastructure details to simulate carbon emissions and costs
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="pb-4 sm:pb-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Instance Type */}
           <div className="space-y-2">
-            <Label htmlFor="instance-type" className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-500" />
+            <Label htmlFor="instance-type" className="flex items-center gap-2 text-sm">
+              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" />
               Instance Type
             </Label>
             <Select value={instanceType} onValueChange={setInstanceType}>
@@ -102,9 +102,9 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
               <SelectContent>
                 {availableInstances.map((instance) => (
                   <SelectItem key={instance.instance_type} value={instance.instance_type}>
-                    <span className="font-mono">{instance.instance_type}</span>
-                    <span className="ml-2 text-muted-foreground">
-                      ({instance.vcpus} vCPU, {instance.memory_gb}GB RAM)
+                    <span className="font-mono text-sm">{instance.instance_type}</span>
+                    <span className="ml-2 text-muted-foreground text-xs sm:text-sm">
+                      ({instance.vcpus} vCPU, {instance.memory_gb}GB)
                     </span>
                   </SelectItem>
                 ))}
@@ -152,8 +152,8 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
           {/* Hours per Month */}
           <div className="space-y-2">
-            <Label htmlFor="hours" className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-green-500" />
+            <Label htmlFor="hours" className="flex items-center gap-2 text-sm">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
               Hours Running per Month
             </Label>
             <Input
@@ -173,8 +173,8 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
           {/* Current Region */}
           <div className="space-y-2">
-            <Label htmlFor="region" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-red-500" />
+            <Label htmlFor="region" className="flex items-center gap-2 text-sm">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
               Current Region
             </Label>
             <Select value={currentRegion} onValueChange={setCurrentRegion}>
@@ -185,8 +185,8 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
                 {availableRegions.map((region) => (
                   <SelectItem key={region.region_code} value={region.region_code}>
                     <span className="font-medium">{region.region_name}</span>
-                    <span className="ml-2 text-muted-foreground">
-                      ({region.country}) – {region.carbon_intensity_gco2_kwh} gCO₂/kWh
+                    <span className="ml-1 sm:ml-2 text-muted-foreground text-xs">
+                      ({region.country})
                     </span>
                   </SelectItem>
                 ))}
@@ -196,8 +196,8 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
           {/* User Location */}
           <div className="space-y-2">
-            <Label htmlFor="user-location" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-purple-500" />
+            <Label htmlFor="user-location" className="flex items-center gap-2 text-sm">
+              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" />
               Your Location (Optional)
             </Label>
             <Input

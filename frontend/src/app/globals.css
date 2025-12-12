@@ -121,6 +121,32 @@
   }
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+  
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Better touch targets */
+  button, 
+  [role="button"],
+  select,
+  input {
+    min-height: 44px;
+  }
+  
+  /* Improve table scrolling on mobile */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
+
 /* AI Sustainability Report Prose Styling */
 .ai-report-prose {
   line-height: 1.75;
@@ -128,10 +154,10 @@
 }
 
 .ai-report-prose h2 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   display: flex;
@@ -139,20 +165,43 @@
   gap: 0.5rem;
 }
 
+@media (min-width: 640px) {
+  .ai-report-prose h2 {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
 .ai-report-prose h2:first-child {
   margin-top: 0;
 }
 
 .ai-report-prose h3 {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   margin-bottom: 0.5rem;
   color: color-mix(in srgb, var(--foreground) 90%, var(--primary));
 }
 
+@media (min-width: 640px) {
+  .ai-report-prose h3 {
+    font-size: 1rem;
+    margin-top: 1.25rem;
+  }
+}
+
 .ai-report-prose p {
-  margin-bottom: 1rem;
+  margin-bottom: 0.875rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .ai-report-prose p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
 }
 
 .ai-report-prose p:last-child {
