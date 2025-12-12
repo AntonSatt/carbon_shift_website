@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Zap, Cloud, MapPin, Clock } from 'lucide-react';
+import { Loader2, Zap, Cloud, MapPin, Clock, Server } from 'lucide-react';
 import { SimulationRequest, InstanceInfo, RegionInfo } from '@/lib/types';
 
 // Static data for when API is not available
@@ -50,6 +50,9 @@ interface SimulationFormProps {
 }
 
 export function SimulationForm({ onSubmit, isLoading, instances, regions }: SimulationFormProps) {
+  // Cloud provider state
+  const [cloudProvider, setCloudProvider] = useState('aws');
+  
   // Default to m5.large - a good general-purpose instance for medium companies
   const [instanceType, setInstanceType] = useState('m5.large');
   const [instanceCount, setInstanceCount] = useState(1);
@@ -66,7 +69,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      cloud_provider: 'aws',
+      cloud_provider: cloudProvider,
       instance_type: instanceType,
       instance_count: instanceCount,
       cpu_utilization: cpuUtilization,
@@ -78,7 +81,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-4 sm:pb-6">
+      <CardHeader className="pb-2 sm:pb-3 gap-1.5">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <Cloud className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
           Configure Your Workload
@@ -87,8 +90,43 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
           Enter your cloud infrastructure details to simulate carbon emissions and costs
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-4 sm:pb-6">
+      <CardContent className="pt-0 pb-4 sm:pb-6">
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {/* Cloud Provider */}
+          <div>
+            <Label htmlFor="cloud-provider" className="flex items-center gap-2 text-sm mb-1.5">
+              <Server className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+              Cloud Provider
+            </Label>
+            <Select value={cloudProvider} onValueChange={setCloudProvider}>
+              <SelectTrigger id="cloud-provider">
+                <SelectValue placeholder="Select cloud provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aws">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">☁️</span>
+                    <span className="font-medium">Amazon Web Services (AWS)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="azure" disabled>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🔷</span>
+                    <span className="font-medium text-muted-foreground">Microsoft Azure</span>
+                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gcp" disabled>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🌐</span>
+                    <span className="font-medium text-muted-foreground">Google Cloud Platform</span>
+                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Instance Type */}
           <div className="space-y-2">
             <Label htmlFor="instance-type" className="flex items-center gap-2 text-sm">
