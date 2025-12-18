@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Zap, Cloud, MapPin, Clock, Server, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
+import { Loader2, Cloud, MapPin, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
 import { SimulationRequest, InstanceInfo, RegionInfo, PriorityPreferences } from '@/lib/types';
 
 // Static data for when API is not available
@@ -73,8 +73,6 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
   const availableInstances = instances || DEFAULT_INSTANCES;
   const availableRegions = regions || DEFAULT_REGIONS;
 
-  const selectedInstance = availableInstances.find((i) => i.instance_type === instanceType);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -91,99 +89,104 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-2 sm:pb-3 gap-1.5">
+      <CardHeader className="pb-3 gap-1">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <Cloud className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
           Configure Your Workload
         </CardTitle>
         <CardDescription className="text-xs sm:text-sm">
-          Enter your cloud infrastructure details to simulate carbon emissions and costs
+          Set up your cloud infrastructure to analyze carbon impact
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0 pb-4 sm:pb-6">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Cloud Provider */}
-          <div>
-            <Label htmlFor="cloud-provider" className="flex items-center gap-2 text-sm mb-1.5">
-              <Server className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
-              Cloud Provider
-            </Label>
-            <Select value={cloudProvider} onValueChange={setCloudProvider}>
-              <SelectTrigger id="cloud-provider">
-                <SelectValue placeholder="Select cloud provider" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="aws">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">☁️</span>
-                    <span className="font-medium">Amazon Web Services (AWS)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="azure" disabled>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🔷</span>
-                    <span className="font-medium text-muted-foreground">Microsoft Azure</span>
-                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="gcp" disabled>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">🌐</span>
-                    <span className="font-medium text-muted-foreground">Google Cloud Platform</span>
-                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Instance Type */}
-          <div className="space-y-2">
-            <Label htmlFor="instance-type" className="flex items-center gap-2 text-sm">
-              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" />
-              Instance Type
-            </Label>
-            <Select value={instanceType} onValueChange={setInstanceType}>
-              <SelectTrigger id="instance-type">
-                <SelectValue placeholder="Select instance type" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableInstances.map((instance) => (
-                  <SelectItem key={instance.instance_type} value={instance.instance_type}>
-                    <span className="font-mono text-sm">{instance.instance_type}</span>
-                    <span className="ml-2 text-muted-foreground text-xs sm:text-sm">
-                      ({instance.vcpus} vCPU, {instance.memory_gb}GB)
+      <CardContent className="pt-0 pb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Cloud Provider & Instance Type - 2 column on larger screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="cloud-provider" className="text-xs font-medium mb-1.5 block">
+                Cloud Provider
+              </Label>
+              <Select value={cloudProvider} onValueChange={setCloudProvider}>
+                <SelectTrigger id="cloud-provider" className="h-9">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aws">
+                    <span className="flex items-center gap-2">
+                      <span>☁️</span>
+                      <span>AWS</span>
                     </span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedInstance && (
-              <p className="text-sm text-muted-foreground">
-                Power: {selectedInstance.idle_watts}W idle – {selectedInstance.max_watts}W max
-              </p>
-            )}
+                  <SelectItem value="azure" disabled>
+                    <span className="text-muted-foreground">Azure (Soon)</span>
+                  </SelectItem>
+                  <SelectItem value="gcp" disabled>
+                    <span className="text-muted-foreground">GCP (Soon)</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="instance-type" className="text-xs font-medium mb-1.5 block">
+                Instance Type
+              </Label>
+              <Select value={instanceType} onValueChange={setInstanceType}>
+                <SelectTrigger id="instance-type" className="h-9">
+                  <SelectValue placeholder="Select instance" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableInstances.map((instance) => (
+                    <SelectItem key={instance.instance_type} value={instance.instance_type}>
+                      <span className="font-mono text-xs">{instance.instance_type}</span>
+                      <span className="ml-1 text-muted-foreground text-xs">
+                        ({instance.vcpus}vCPU, {instance.memory_gb}GB)
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Instance Count */}
-          <div className="space-y-2">
-            <Label htmlFor="instance-count">Number of Instances</Label>
-            <Input
-              id="instance-count"
-              type="number"
-              min={1}
-              max={1000}
-              value={instanceCount}
-              onChange={(e) => setInstanceCount(Math.max(1, parseInt(e.target.value) || 1))}
-            />
+          {/* Instance Count & Hours - 2 column */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="instance-count" className="text-xs font-medium mb-1.5 block">
+                Instances
+              </Label>
+              <Input
+                id="instance-count"
+                type="number"
+                min={1}
+                max={1000}
+                value={instanceCount}
+                onChange={(e) => setInstanceCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="h-9"
+              />
+            </div>
+            <div>
+              <Label htmlFor="hours" className="text-xs font-medium mb-1.5 block">
+                Hours/Month
+              </Label>
+              <Input
+                id="hours"
+                type="number"
+                min={1}
+                max={744}
+                value={hoursPerMonth}
+                onChange={(e) => setHoursPerMonth(Math.min(744, Math.max(1, parseInt(e.target.value) || 730)))}
+                className="h-9"
+              />
+            </div>
           </div>
 
-          {/* CPU Utilization */}
-          <div className="space-y-2">
-            <Label className="flex items-center justify-between">
-              <span>Average CPU Utilization</span>
-              <span className="font-mono text-sm">{cpuUtilization}%</span>
-            </Label>
+          {/* CPU Utilization - Compact */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-medium">CPU Utilization</Label>
+              <span className="text-xs font-mono text-muted-foreground">{cpuUtilization}%</span>
+            </div>
             <Slider
               value={[cpuUtilization]}
               onValueChange={(value) => setCpuUtilization(value[0])}
@@ -192,50 +195,23 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
               step={5}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Idle (0%)</span>
-              <span>Heavy (100%)</span>
-            </div>
-          </div>
-
-          {/* Hours per Month */}
-          <div className="space-y-2">
-            <Label htmlFor="hours" className="flex items-center gap-2 text-sm">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
-              Hours Running per Month
-            </Label>
-            <Input
-              id="hours"
-              type="number"
-              min={1}
-              max={744}
-              value={hoursPerMonth}
-              onChange={(e) => setHoursPerMonth(Math.min(744, Math.max(1, parseInt(e.target.value) || 730)))}
-            />
-            <p className="text-sm text-muted-foreground">
-              {hoursPerMonth === 730 || hoursPerMonth === 744
-                ? '24/7 operation (full month)'
-                : `~${Math.round((hoursPerMonth / 730) * 100)}% uptime`}
-            </p>
           </div>
 
           {/* Current Region */}
-          <div className="space-y-2">
-            <Label htmlFor="region" className="flex items-center gap-2 text-sm">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
+          <div>
+            <Label htmlFor="region" className="text-xs font-medium mb-1.5 flex items-center gap-1.5">
+              <MapPin className="h-3 w-3 text-red-500" />
               Current Region
             </Label>
             <Select value={currentRegion} onValueChange={setCurrentRegion}>
-              <SelectTrigger id="region">
-                <SelectValue placeholder="Select current region" />
+              <SelectTrigger id="region" className="h-9">
+                <SelectValue placeholder="Select region" />
               </SelectTrigger>
               <SelectContent>
                 {availableRegions.map((region) => (
                   <SelectItem key={region.region_code} value={region.region_code}>
                     <span className="font-medium">{region.region_name}</span>
-                    <span className="ml-1 sm:ml-2 text-muted-foreground text-xs">
-                      ({region.country})
-                    </span>
+                    <span className="ml-1 text-muted-foreground text-xs">({region.country})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -243,126 +219,111 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
           </div>
 
           {/* User Location */}
-          <div className="space-y-2">
-            <Label htmlFor="user-location" className="flex items-center gap-2 text-sm">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" />
-              Your Location (Optional)
+          <div>
+            <Label htmlFor="user-location" className="text-xs font-medium mb-1.5 flex items-center gap-1.5">
+              <MapPin className="h-3 w-3 text-purple-500" />
+              Your Location
+              <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Input
               id="user-location"
               type="text"
-              placeholder="e.g., United States, Germany, Singapore"
+              placeholder="e.g., Germany, Finland, USA"
               value={userLocation}
               onChange={(e) => setUserLocation(e.target.value)}
+              className="h-9"
             />
-            <p className="text-sm text-muted-foreground">
-              Get personalized recommendations based on latency and regional compliance
-            </p>
           </div>
 
-          {/* Advanced Options Toggle */}
-          <div className="border-t pt-4">
+          {/* Advanced Options - More compact toggle */}
+          <div className="border-t pt-3">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
+              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full justify-between py-1"
             >
-              <span className="flex items-center gap-2">
-                <Settings2 className="h-4 w-4" />
-                Advanced Options
+              <span className="flex items-center gap-1.5">
+                <Settings2 className="h-3.5 w-3.5" />
+                Priority Settings
               </span>
-              {showAdvanced ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             </button>
             
             {showAdvanced && (
-              <div className="mt-4 space-y-4 p-4 bg-muted/50 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-3">
-                  Customize how recommendations are weighted. Higher values = more importance.
+              <div className="mt-3 space-y-3 p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  Adjust how recommendations are weighted:
                 </p>
                 
-                {/* Carbon Priority */}
-                <div className="space-y-2">
-                  <Label className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      🌱 Carbon Reduction
-                    </span>
-                    <span className="font-mono text-xs">{Math.round(priorities.carbon * 100)}%</span>
-                  </Label>
-                  <Slider
-                    value={[priorities.carbon * 100]}
-                    onValueChange={(value) => setPriorities({ ...priorities, carbon: value[0] / 100 })}
-                    min={0}
-                    max={100}
-                    step={10}
-                    className="w-full"
-                  />
+                {/* Priority Sliders - Compact 2x2 grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs">🌱 Carbon</span>
+                      <span className="text-xs font-mono text-muted-foreground">{Math.round(priorities.carbon * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[priorities.carbon * 100]}
+                      onValueChange={(value) => setPriorities({ ...priorities, carbon: value[0] / 100 })}
+                      min={0}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs">💰 Cost</span>
+                      <span className="text-xs font-mono text-muted-foreground">{Math.round(priorities.price * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[priorities.price * 100]}
+                      onValueChange={(value) => setPriorities({ ...priorities, price: value[0] / 100 })}
+                      min={0}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs">⚡ Latency</span>
+                      <span className="text-xs font-mono text-muted-foreground">{Math.round(priorities.latency * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[priorities.latency * 100]}
+                      onValueChange={(value) => setPriorities({ ...priorities, latency: value[0] / 100 })}
+                      min={0}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs">🔒 Compliance</span>
+                      <span className="text-xs font-mono text-muted-foreground">{Math.round(priorities.compliance * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={[priorities.compliance * 100]}
+                      onValueChange={(value) => setPriorities({ ...priorities, compliance: value[0] / 100 })}
+                      min={0}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
                 
-                {/* Price Priority */}
-                <div className="space-y-2">
-                  <Label className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      💰 Cost Savings
-                    </span>
-                    <span className="font-mono text-xs">{Math.round(priorities.price * 100)}%</span>
-                  </Label>
-                  <Slider
-                    value={[priorities.price * 100]}
-                    onValueChange={(value) => setPriorities({ ...priorities, price: value[0] / 100 })}
-                    min={0}
-                    max={100}
-                    step={10}
-                    className="w-full"
-                  />
-                </div>
-                
-                {/* Latency Priority */}
-                <div className="space-y-2">
-                  <Label className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      ⚡ Low Latency
-                    </span>
-                    <span className="font-mono text-xs">{Math.round(priorities.latency * 100)}%</span>
-                  </Label>
-                  <Slider
-                    value={[priorities.latency * 100]}
-                    onValueChange={(value) => setPriorities({ ...priorities, latency: value[0] / 100 })}
-                    min={0}
-                    max={100}
-                    step={10}
-                    className="w-full"
-                  />
-                </div>
-                
-                {/* Compliance Priority */}
-                <div className="space-y-2">
-                  <Label className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      🔒 Data Compliance
-                    </span>
-                    <span className="font-mono text-xs">{Math.round(priorities.compliance * 100)}%</span>
-                  </Label>
-                  <Slider
-                    value={[priorities.compliance * 100]}
-                    onValueChange={(value) => setPriorities({ ...priorities, compliance: value[0] / 100 })}
-                    min={0}
-                    max={100}
-                    step={10}
-                    className="w-full"
-                  />
-                </div>
-                
-                {/* Reset Button */}
                 <button
                   type="button"
                   onClick={() => setPriorities({ carbon: 1.0, price: 0.6, latency: 0.3, compliance: 0.2 })}
                   className="text-xs text-muted-foreground hover:text-foreground underline"
                 >
-                  Reset to defaults
+                  Reset defaults
                 </button>
               </div>
             )}
@@ -371,14 +332,14 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            size="default"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running Simulation...
+                Analyzing...
               </>
             ) : (
               <>
