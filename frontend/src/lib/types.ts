@@ -1,5 +1,12 @@
 // API Types matching the backend schemas
 
+export interface PriorityPreferences {
+  carbon: number;    // 0-1, default 1.0 (most important)
+  price: number;     // 0-1, default 0.6
+  latency: number;   // 0-1, default 0.3
+  compliance: number; // 0-1, default 0.2
+}
+
 export interface SimulationRequest {
   cloud_provider: string;
   instance_type: string;
@@ -8,6 +15,7 @@ export interface SimulationRequest {
   hours_per_month: number;
   current_region: string;
   user_location?: string;
+  priorities?: PriorityPreferences;
 }
 
 export interface RegionResult {

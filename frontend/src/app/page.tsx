@@ -6,7 +6,8 @@ import { ResultsDashboard } from '@/components/results-dashboard';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SimulationRequest, SimulationResponse, MetadataResponse } from '@/lib/types';
 import { apiClient } from '@/lib/api';
-import { Leaf, Github, Linkedin, Globe } from 'lucide-react';
+import { Leaf, Github, Linkedin, Globe, Info } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -54,6 +55,13 @@ export default function Home() {
             <p className="text-sm text-muted-foreground hidden md:block">
               Move your bits, save the planet (and money) 🌍
             </p>
+            <Link 
+              href="/about"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Info className="h-4 w-4" />
+              <span className="hidden sm:inline">About</span>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -72,9 +80,9 @@ export default function Home() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[400px_1fr]">
-          {/* Form */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[420px_1fr]">
+          {/* Form - Sticky on desktop, no inner scroll */}
+          <div className="lg:sticky lg:top-20 lg:self-start">
             <SimulationForm
               onSubmit={handleSubmit}
               isLoading={isLoading}
@@ -92,13 +100,30 @@ export default function Home() {
 
           {/* Results */}
           <div>
-            {result ? (
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center border rounded-lg bg-gradient-to-br from-green-50/50 to-blue-50/50 dark:from-green-950/20 dark:to-blue-950/20 px-4">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping" />
+                  <div className="relative bg-background rounded-full p-4 shadow-lg">
+                    <Leaf className="h-8 w-8 text-green-600 animate-pulse" />
+                  </div>
+                </div>
+                <p className="text-lg font-semibold mt-6 text-foreground">Analyzing Carbon Impact</p>
+                <p className="text-sm text-muted-foreground mt-2">Calculating emissions across all regions...</p>
+                <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">Generating AI sustainability report</p>
+              </div>
+            ) : result ? (
               <ResultsDashboard result={result} />
             ) : (
-              <div className="flex flex-col items-center justify-center h-[250px] sm:h-[400px] text-center text-muted-foreground border-2 border-dashed rounded-lg px-4">
-                <Leaf className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 opacity-50" />
-                <p className="text-base sm:text-lg font-medium">Configure your workload</p>
-                <p className="text-xs sm:text-sm">Enter your cloud details and click &quot;Calculate Carbon Impact&quot;</p>
+              <div className="flex flex-col items-center justify-center h-[250px] sm:h-[400px] text-center text-muted-foreground border-2 border-dashed rounded-lg px-4 bg-muted/30">
+                <Leaf className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 opacity-30" />
+                <p className="text-base sm:text-lg font-medium opacity-70">Results will appear here</p>
+                <p className="text-xs sm:text-sm opacity-50">Configure your workload and click &quot;Calculate Carbon Impact&quot;</p>
               </div>
             )}
           </div>
