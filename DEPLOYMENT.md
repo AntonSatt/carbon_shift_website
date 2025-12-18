@@ -15,6 +15,7 @@ ssh user@your-server-ip
 cd ~/apps/carbon_shift_website
 
 # Pull latest changes
+git checkout frontend/package-lock.json (if you have changes)
 git pull
 
 # Update backend
