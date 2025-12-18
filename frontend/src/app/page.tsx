@@ -6,7 +6,8 @@ import { ResultsDashboard } from '@/components/results-dashboard';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SimulationRequest, SimulationResponse, MetadataResponse } from '@/lib/types';
 import { apiClient } from '@/lib/api';
-import { Leaf, Github, Linkedin, Globe } from 'lucide-react';
+import { Leaf, Github, Linkedin, Globe, Info } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   const [result, setResult] = useState<SimulationResponse | null>(null);
@@ -54,6 +55,13 @@ export default function Home() {
             <p className="text-sm text-muted-foreground hidden md:block">
               Move your bits, save the planet (and money) 🌍
             </p>
+            <Link 
+              href="/about"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Info className="h-4 w-4" />
+              <span className="hidden sm:inline">About</span>
+            </Link>
             <ThemeToggle />
           </div>
         </div>

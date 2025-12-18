@@ -8,6 +8,14 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+class PriorityPreferences(BaseModel):
+    """User's priority preferences for recommendations (0.0 to 1.0 scale)."""
+    carbon: float = Field(default=1.0, ge=0.0, le=1.0, description="Priority weight for carbon reduction (default: 1.0 - highest)")
+    price: float = Field(default=0.6, ge=0.0, le=1.0, description="Priority weight for cost savings (default: 0.6)")
+    latency: float = Field(default=0.3, ge=0.0, le=1.0, description="Priority weight for low latency (default: 0.3)")
+    compliance: float = Field(default=0.2, ge=0.0, le=1.0, description="Priority weight for data sovereignty/compliance (default: 0.2)")
+
+
 class SimulationRequest(BaseModel):
     """Request model for running a carbon simulation."""
     cloud_provider: str = Field(default="aws", description="Cloud provider (aws, azure, gcp)")
@@ -17,6 +25,7 @@ class SimulationRequest(BaseModel):
     hours_per_month: float = Field(default=730, ge=1, le=744, description="Hours running per month")
     current_region: str = Field(..., description="Current AWS region (e.g., eu-central-1)")
     user_location: Optional[str] = Field(None, description="User's location for personalized recommendations (e.g., 'United States', 'Germany', 'Singapore')")
+    priorities: Optional[PriorityPreferences] = Field(None, description="Advanced: Custom priority weights for recommendations")
 
 
 class RegionResult(BaseModel):

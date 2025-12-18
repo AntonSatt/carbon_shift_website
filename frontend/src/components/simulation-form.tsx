@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Zap, Cloud, MapPin, Clock, Server } from 'lucide-react';
-import { SimulationRequest, InstanceInfo, RegionInfo } from '@/lib/types';
+import { Loader2, Zap, Cloud, MapPin, Clock, Server, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
+import { SimulationRequest, InstanceInfo, RegionInfo, PriorityPreferences } from '@/lib/types';
 
 // Static data for when API is not available
 const DEFAULT_INSTANCES: InstanceInfo[] = [
@@ -60,6 +60,15 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
   const [hoursPerMonth, setHoursPerMonth] = useState(730);
   const [currentRegion, setCurrentRegion] = useState('eu-central-1');
   const [userLocation, setUserLocation] = useState('');
+  
+  // Advanced options
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [priorities, setPriorities] = useState<PriorityPreferences>({
+    carbon: 1.0,
+    price: 0.6,
+    latency: 0.3,
+    compliance: 0.2,
+  });
 
   const availableInstances = instances || DEFAULT_INSTANCES;
   const availableRegions = regions || DEFAULT_REGIONS;
@@ -76,6 +85,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
       hours_per_month: hoursPerMonth,
       current_region: currentRegion,
       user_location: userLocation || undefined,
+      priorities: showAdvanced ? priorities : undefined,
     });
   };
 
@@ -248,6 +258,114 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
             <p className="text-sm text-muted-foreground">
               Get personalized recommendations based on latency and regional compliance
             </p>
+          </div>
+
+          {/* Advanced Options Toggle */}
+          <div className="border-t pt-4">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                Advanced Options
+              </span>
+              {showAdvanced ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+            
+            {showAdvanced && (
+              <div className="mt-4 space-y-4 p-4 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Customize how recommendations are weighted. Higher values = more importance.
+                </p>
+                
+                {/* Carbon Priority */}
+                <div className="space-y-2">
+                  <Label className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      🌱 Carbon Reduction
+                    </span>
+                    <span className="font-mono text-xs">{Math.round(priorities.carbon * 100)}%</span>
+                  </Label>
+                  <Slider
+                    value={[priorities.carbon * 100]}
+                    onValueChange={(value) => setPriorities({ ...priorities, carbon: value[0] / 100 })}
+                    min={0}
+                    max={100}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+                
+                {/* Price Priority */}
+                <div className="space-y-2">
+                  <Label className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      💰 Cost Savings
+                    </span>
+                    <span className="font-mono text-xs">{Math.round(priorities.price * 100)}%</span>
+                  </Label>
+                  <Slider
+                    value={[priorities.price * 100]}
+                    onValueChange={(value) => setPriorities({ ...priorities, price: value[0] / 100 })}
+                    min={0}
+                    max={100}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+                
+                {/* Latency Priority */}
+                <div className="space-y-2">
+                  <Label className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      ⚡ Low Latency
+                    </span>
+                    <span className="font-mono text-xs">{Math.round(priorities.latency * 100)}%</span>
+                  </Label>
+                  <Slider
+                    value={[priorities.latency * 100]}
+                    onValueChange={(value) => setPriorities({ ...priorities, latency: value[0] / 100 })}
+                    min={0}
+                    max={100}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+                
+                {/* Compliance Priority */}
+                <div className="space-y-2">
+                  <Label className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      🔒 Data Compliance
+                    </span>
+                    <span className="font-mono text-xs">{Math.round(priorities.compliance * 100)}%</span>
+                  </Label>
+                  <Slider
+                    value={[priorities.compliance * 100]}
+                    onValueChange={(value) => setPriorities({ ...priorities, compliance: value[0] / 100 })}
+                    min={0}
+                    max={100}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+                
+                {/* Reset Button */}
+                <button
+                  type="button"
+                  onClick={() => setPriorities({ carbon: 1.0, price: 0.6, latency: 0.3, compliance: 0.2 })}
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Reset to defaults
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

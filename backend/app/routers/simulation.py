@@ -28,15 +28,27 @@ async def run_simulation(request: SimulationRequest):
     
     Takes workload configuration and returns comparisons across all regions.
     Optionally accepts user_location for personalized AI recommendations.
+    Optionally accepts priorities for custom weighting of carbon/price/latency/compliance.
     """
     try:
         # Run the simulation
         result = simulation_service.run_simulation(request)
         
-        # Generate AI insights with user location context
+        # Convert priorities to dict if provided
+        priorities_dict = None
+        if request.priorities:
+            priorities_dict = {
+                "carbon": request.priorities.carbon,
+                "price": request.priorities.price,
+                "latency": request.priorities.latency,
+                "compliance": request.priorities.compliance,
+            }
+        
+        # Generate AI insights with user location context and priorities
         insights, provider, recommended_region_code = ai_insights_service.generate_insights(
             result, 
-            user_location=request.user_location
+            user_location=request.user_location,
+            priorities=priorities_dict
         )
         result.ai_insights = insights
         result.ai_provider = provider
