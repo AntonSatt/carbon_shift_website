@@ -100,14 +100,14 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
       </CardHeader>
       <CardContent className="pt-0 pb-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Cloud Provider & Instance Type - 2 column on larger screens */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+          {/* Cloud Provider & Instance Type - 2 column */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0">
               <Label htmlFor="cloud-provider" className="text-xs font-medium mb-1.5 block">
                 Cloud Provider
               </Label>
               <Select value={cloudProvider} onValueChange={setCloudProvider}>
-                <SelectTrigger id="cloud-provider" className="h-9">
+                <SelectTrigger id="cloud-provider" className="h-9 w-full">
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,12 +127,12 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
               </Select>
             </div>
             
-            <div>
+            <div className="min-w-0">
               <Label htmlFor="instance-type" className="text-xs font-medium mb-1.5 block">
                 Instance Type
               </Label>
               <Select value={instanceType} onValueChange={setInstanceType}>
-                <SelectTrigger id="instance-type" className="h-9">
+                <SelectTrigger id="instance-type" className="h-9 w-full">
                   <SelectValue placeholder="Select instance" />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,7 +151,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
 
           {/* Instance Count & Hours - 2 column */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="min-w-0">
               <Label htmlFor="instance-count" className="text-xs font-medium mb-1.5 block">
                 Instances
               </Label>
@@ -162,10 +162,10 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
                 max={1000}
                 value={instanceCount}
                 onChange={(e) => setInstanceCount(Math.max(1, parseInt(e.target.value) || 1))}
-                className="h-9"
+                className="h-9 w-full"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label htmlFor="hours" className="text-xs font-medium mb-1.5 block">
                 Hours/Month
               </Label>
@@ -176,7 +176,7 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
                 max={744}
                 value={hoursPerMonth}
                 onChange={(e) => setHoursPerMonth(Math.min(744, Math.max(1, parseInt(e.target.value) || 730)))}
-                className="h-9"
+                className="h-9 w-full"
               />
             </div>
           </div>
@@ -240,13 +240,14 @@ export function SimulationForm({ onSubmit, isLoading, instances, regions }: Simu
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full justify-between py-1"
+              className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors w-full justify-between py-2 px-3 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/30"
             >
-              <span className="flex items-center gap-1.5">
-                <Settings2 className="h-3.5 w-3.5" />
-                Priority Settings
+              <span className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4 text-primary" />
+                <span>Priority Settings</span>
+                <span className="text-xs font-normal text-muted-foreground">(customize weighting)</span>
               </span>
-              {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              {showAdvanced ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
             </button>
             
             {showAdvanced && (
