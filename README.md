@@ -282,7 +282,7 @@ carbon_shift_website/
 
 ## License
 
-Copyright © 2025 Anton Sätterkvist  
+Copyright © 2026 Anton Sätterkvist  
 All rights reserved.
 
 ---
