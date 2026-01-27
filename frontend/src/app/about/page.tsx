@@ -309,7 +309,7 @@ export default function AboutPage() {
 
       {/* Footer */}
       <footer className="border-t py-6 sm:py-8 text-center text-xs sm:text-sm text-muted-foreground px-4">
-        <p>© 2025 Anton Sätterkvist. Built with code & chaos. 💚</p>
+        <p>© 2026 Anton Sätterkvist. Built with code & chaos. 💚</p>
         <div className="flex items-center justify-center gap-3 mt-3">
           <a
             href="https://antonsatt.com/"
