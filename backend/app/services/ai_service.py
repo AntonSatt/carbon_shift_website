@@ -254,7 +254,7 @@ class AIInsightsService:
         # Check for OpenRouter (recommended)
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
         self.openrouter_app_url = os.getenv("OPENROUTER_APP_URL", "http://localhost:3000")
-        self.openrouter_model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
+        self.openrouter_model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash-lite")
         self.use_openrouter = bool(self.openrouter_api_key)
         
         # Fallback to Bedrock
