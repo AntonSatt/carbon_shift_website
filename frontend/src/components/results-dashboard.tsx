@@ -277,7 +277,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                     <XAxis type="number" tick={{ fontSize: 12 }} />
                     <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
-                      formatter={(value: number) => [`${value} kg CO₂`, 'Emissions']}
+                      formatter={(value) => [`${value} kg CO₂`, 'Emissions']}
                     />
                     <Bar dataKey="emissions" radius={[0, 4, 4, 0]}>
                       {carbonChartData.map((entry, index) => (
@@ -311,7 +311,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                     <XAxis type="number" tickFormatter={(value) => `$${value}`} tick={{ fontSize: 12 }} />
                     <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                     <Tooltip
-                      formatter={(value: number) => [`$${value}`, 'Monthly Cost']}
+                      formatter={(value) => [`$${value}`, 'Monthly Cost']}
                     />
                     <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                       {costChartData.map((entry, index) => (
