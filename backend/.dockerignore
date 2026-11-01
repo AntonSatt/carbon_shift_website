@@ -1,0 +1,11 @@
+# Never ship local secrets or environments in the image.
+.env
+.env.*
+venv
+__pycache__
+**/__pycache__
+*.pyc
+app/cache/*
+!app/cache/.gitkeep
+Dockerfile
+.dockerignore

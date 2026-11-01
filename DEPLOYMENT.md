@@ -1,5 +1,34 @@
 # CarbonShift Production Deployment Guide
 
+## Current deployment: container images on k3s
+
+Production runs as two container images on a k3s cluster, built by
+`.github/workflows/build.yml` on every push to `main` that touches
+`frontend/` or `backend/`:
+
+- `ghcr.io/antonsatt/carbonshift-frontend:<commit>`: Next.js standalone
+  (`frontend/Dockerfile`), with `NEXT_PUBLIC_API_URL` baked in at build time.
+- `ghcr.io/antonsatt/carbonshift-backend:<commit>`: FastAPI on uvicorn
+  (`backend/Dockerfile`). Secrets come from the cluster at runtime, never from
+  a `.env` file in the image (`.dockerignore` excludes them).
+
+To deploy, wait for the workflow to publish both images, then change the image
+tags in the infrastructure repository's carbonshift manifest to the new commit.
+Argo CD rolls them out.
+
+Test locally:
+
+```bash
+docker build -t carbonshift-backend backend
+docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 \
+  -t carbonshift-frontend frontend
+```
+
+The rest of this guide describes the earlier deployment on a DigitalOcean
+droplet with pm2, which no longer exists. It is kept for reference.
+
+## Legacy: DigitalOcean droplet with pm2
+
 **Server:** DigitalOcean Droplet  
 **OS:** Ubuntu 24 LTS
 

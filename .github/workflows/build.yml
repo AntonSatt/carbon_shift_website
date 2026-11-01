@@ -1,0 +1,106 @@
+name: Build and publish images
+
+# Builds ARM64 images for the k3s node and publishes them to GHCR with an
+# immutable commit tag. Deploying is a separate, reviewed change: bump the tag
+# in the infrastructure repository's carbonshift manifest.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: carbonshift-images
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY_PREFIX: ghcr.io/antonsatt/carbonshift
+  PUBLIC_API_URL: https://carbonshift.antonsatt.com
+
+jobs:
+  build-and-publish:
+    name: Build, smoke-test and publish
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Build ARM64 images
+        run: |
+          set -euo pipefail
+          docker build --pull \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "${REGISTRY_PREFIX}-backend:${GITHUB_SHA}" \
+            backend
+          docker build --pull \
+            --build-arg "NEXT_PUBLIC_API_URL=${PUBLIC_API_URL}" \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "${REGISTRY_PREFIX}-frontend:${GITHUB_SHA}" \
+            frontend
+
+      - name: Smoke-test images
+        run: |
+          set -euo pipefail
+          backend_id="$(docker run --detach --publish 127.0.0.1:8000:8000 "${REGISTRY_PREFIX}-backend:${GITHUB_SHA}")"
+          frontend_id="$(docker run --detach --publish 127.0.0.1:3000:3000 "${REGISTRY_PREFIX}-frontend:${GITHUB_SHA}")"
+          cleanup() {
+            docker rm --force "${backend_id}" "${frontend_id}" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/api/v1/health >/dev/null \
+              && curl --fail --silent http://127.0.0.1:3000/ >/tmp/index.html; then
+              break
+            fi
+            if [ "${attempt}" -eq 30 ]; then
+              docker logs "${backend_id}"
+              docker logs "${frontend_id}"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          curl --fail --silent --show-error -X POST http://127.0.0.1:8000/api/v1/simulate \
+            -H 'Content-Type: application/json' \
+            -d '{"instance_type":"m5.large","current_region":"eu-central-1"}' \
+            | grep --fixed-strings --quiet '"success":true'
+          grep --fixed-strings --quiet "CarbonShift" /tmp/index.html
+
+          # Both images must run as an unprivileged user.
+          for image in backend frontend; do
+            uid="$(docker run --rm --entrypoint id "${REGISTRY_PREFIX}-${image}:${GITHUB_SHA}" -u)"
+            if [ "${uid}" = "0" ]; then
+              echo "${image} runs as root" >&2
+              exit 1
+            fi
+          done
+
+      - name: Log in to GHCR
+        run: |
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Publish immutable tags
+        run: |
+          set -euo pipefail
+          docker push "${REGISTRY_PREFIX}-backend:${GITHUB_SHA}"
+          docker push "${REGISTRY_PREFIX}-frontend:${GITHUB_SHA}"
+          {
+            echo "Published:"
+            echo "- ${REGISTRY_PREFIX}-backend:${GITHUB_SHA}"
+            echo "- ${REGISTRY_PREFIX}-frontend:${GITHUB_SHA}"
+          } >> "${GITHUB_STEP_SUMMARY}"
